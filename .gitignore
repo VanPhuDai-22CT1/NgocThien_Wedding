@@ -1,0 +1,34 @@
+# Node
+node_modules/
+npm-debug.log*
+.env
+.env.local
+.env.*.local
+
+# Build outputs
+dist/
+build/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Caches
+.cache/
+.parcel-cache/
+/.pnp
+.pnp.js
+
+# PHP vendor (keep composer vendor out)
+vendor/

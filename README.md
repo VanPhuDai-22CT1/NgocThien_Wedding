@@ -1,3 +1,39 @@
+# NgocThien_Wedding
+
+This repository contains the frontend and backend of the Ngọc Thiện Wedding project.
+
+Quick start (local):
+
+1. Copy environment file and edit local settings:
+
+```powershell
+copy .env.example .env
+# Edit .env to set DB credentials and PORT
+```
+
+2. Initialize database (local MySQL must be running):
+
+```powershell
+cd backend
+npm install
+npm run init-db
+```
+
+3. Start backend (development):
+
+```powershell
+npm --prefix backend run dev
+```
+
+4. Start frontend (if using the repo `src`):
+
+```powershell
+npm install
+npm start
+```
+
+Notes
+- The `clean-main` branch was created to avoid pushing `node_modules` and large cache files. Create a pull request from `clean-main` → `main` on GitHub and merge there.
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
