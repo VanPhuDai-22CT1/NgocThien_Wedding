@@ -1,0 +1,1168 @@
+/* ======================================================
+   RESET + BASE
+====================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Poppins", system-ui, sans-serif;
+  background: #f6f7fb;
+  color: #333;
+}
+
+.home-page-shell {
+  background: linear-gradient(180deg, #f8f9fc 0%, #f7f8fb 45%, #f6f7fa 100%);
+  min-height: 100vh;
+  padding: 18px 0 30px;
+}
+
+section {
+  width: 100%;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ======================================================
+   VARIABLES – TONE SANG TRỌNG
+====================================================== */
+$main-red: #b71c1c;
+$soft-red: #fdeaea;
+$gold: #d4af37;
+$bg-gray: #f5f7fa;
+$gradient-main: linear-gradient(135deg, #b71c1c, #ff5252);
+
+/* ======================================================
+   SECTION NỀN NGOÀI
+====================================================== */
+.commit-section,
+.memories-section {
+  padding: 40px 0;
+  background: transparent;
+}
+
+.commitment-section {
+  padding-bottom: 14px;
+}
+
+.featured-products-section {
+  padding-top: 8px;
+}
+
+/* ======================================================
+   KHUNG TRẮNG TRUNG TÂM
+====================================================== */
+.commit-wrapper,
+.memories-wrapper,
+.testimonial-wrapper {
+  max-width: 1400px;
+  margin: auto;
+  padding: 40px;
+  background: #fff;
+  border-radius: 28px;
+  box-shadow: 0 16px 36px rgba(17, 24, 39, 0.08);
+  border: 1px solid #eef0f5;
+}
+
+/* ======================================================
+   HEADER CHUNG
+====================================================== */
+.commit-header,
+.memories-header,
+.testimonial-header {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.commit-header h2,
+.memories-header h2,
+.testimonial-header h2 {
+  font-size: 34px;
+  font-weight: 700;
+  color: $main-red;
+}
+
+.commit-header span,
+.memories-header span {
+  color: $gold;
+}
+
+.commit-header p {
+  max-width: 650px;
+  margin: 12px auto 0;
+  font-size: 15px;
+  color: #666;
+}
+
+/* ======================================================
+   BADGE
+====================================================== */
+.commit-badge,
+.testimonial-badge,
+.consult-badge {
+  display: inline-block;
+  background: $soft-red;
+  color: $main-red;
+  padding: 7px 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+/* ======================================================
+   CARD CHUẨN CAO CẤP
+====================================================== */
+.card {
+  background: #fff;
+  border-radius: 22px;
+  padding: 32px;
+  height: 100%;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.06);
+  transition: all 0.45s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 25px 55px rgba(0,0,0,0.12);
+}
+
+/* ======================================================
+   CAM KẾT
+====================================================== */
+.commit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 35px;
+}
+
+.commit-card {
+  @extend .card;
+  text-align: center;
+  align-items: center;
+}
+
+.commit-card svg {
+  font-size: 32px;
+  width: 64px;
+  height: 64px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #b8322a; /* 👈 đỏ trầm */
+  background: linear-gradient(
+    135deg,
+    #fde2e0,
+    #fff5f5
+  ); /* 👈 hồng phấn rất nhẹ */
+
+  border-radius: 50%;
+  margin-bottom: 16px;
+}
+
+
+
+.commit-card h4 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.commit-card p {
+  font-size: 14px;
+  color: #666;
+}
+
+.team-trigger {
+  border: none;
+  cursor: pointer;
+  width: 100%;
+  font-family: inherit;
+
+  &:hover {
+    border: 1px solid rgba(183, 28, 28, 0.2);
+  }
+}
+
+.team-info-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(20, 18, 24, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.team-info-modal {
+  width: min(840px, 100%);
+  background: #fff;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  position: relative;
+  animation: zoomIn 0.25s ease;
+  text-align: center;
+
+  h3 {
+    font-size: 30px;
+    color: $main-red;
+    margin-bottom: 8px;
+  }
+
+  .team-intro {
+    color: #5b6470;
+    margin-bottom: 20px;
+    font-size: 15px;
+  }
+}
+
+.team-close-btn {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: #fee2e2;
+  color: $main-red;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 15px;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: $main-red;
+    color: #fff;
+  }
+}
+
+.team-members {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.member-card {
+  border: 1px solid #f1d0d0;
+  border-radius: 14px;
+  padding: 16px;
+  background: linear-gradient(180deg, #fff, #fff8f8);
+  text-align: center;
+
+  h4 {
+    margin-bottom: 4px;
+    font-size: 17px;
+    color: $main-red;
+  }
+
+  span {
+    display: inline-block;
+    margin-bottom: 10px;
+    font-size: 12px;
+    color: #a16207;
+    font-weight: 600;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+
+  p {
+    font-size: 13px;
+    color: #4b5563;
+    line-height: 1.55;
+  }
+}
+
+/* ======================================================
+   PRODUCT – CÀI TIẾN CAO CẤP
+====================================================== */
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+}
+
+.product-trust-row {
+  text-align: center;
+  margin-bottom: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.product-trust-stars {
+  font-size: 24px;
+  letter-spacing: 2px;
+}
+
+.product-trust-text {
+  color: $gold;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.product-rating-spacer {
+  padding: 0 16px 12px;
+}
+
+.view-all-wrap {
+  text-align: center;
+  margin-top: 40px;
+}
+
+.product-card {
+  @extend .card;
+  padding: 0;
+  overflow: visible;
+  position: relative;
+  border: 1px solid #f0f0f0;
+}
+
+.product-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(183, 28, 28, 0.02), transparent);
+  pointer-events: none;
+  border-radius: 22px;
+}
+
+.ai-suggest-wrapper {
+  background: linear-gradient(145deg, #ffffff 0%, #fff8f0 100%);
+  border: 1px solid rgba(212, 175, 55, 0.24);
+}
+
+.ai-suggest-header {
+  text-align: center;
+  margin-bottom: 28px;
+
+  span {
+    display: inline-block;
+    padding: 7px 14px;
+    border-radius: 999px;
+    background: rgba(212, 175, 55, 0.14);
+    color: #926500;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-size: 34px;
+    color: $main-red;
+    margin-bottom: 10px;
+  }
+
+  p {
+    color: #5c5c5c;
+    max-width: 760px;
+    margin: 0 auto;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+}
+
+.ai-grid {
+  margin-top: 6px;
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+.ai-empty {
+  margin-top: 8px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px dashed rgba(183, 28, 28, 0.28);
+  background: rgba(183, 28, 28, 0.05);
+  color: #7b1e1e;
+  font-weight: 600;
+  text-align: center;
+
+  &.warning {
+    border-style: solid;
+    background: rgba(212, 175, 55, 0.1);
+    border-color: rgba(212, 175, 55, 0.45);
+    color: #8a5f00;
+    margin-bottom: 14px;
+  }
+}
+
+.ai-card {
+  border-color: rgba(212, 175, 55, 0.2);
+}
+
+.ai-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 12;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #f4d88d 0%, #d4af37 100%);
+  color: #4d3200;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.ai-meta {
+  padding: 0 16px 16px;
+  text-align: left;
+
+  .ai-rating {
+    font-size: 14px;
+    font-weight: 700;
+    color: #9a6700;
+    margin-bottom: 8px;
+
+    span {
+      color: #8c8c8c;
+      font-size: 12px;
+      margin-left: 6px;
+      font-weight: 600;
+    }
+  }
+
+  p {
+    font-size: 13px;
+    line-height: 1.6;
+    color: #555;
+    min-height: 40px;
+  }
+}
+
+.product-image-container {
+  height: 270px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 22px 22px 0 0;
+}
+
+.product-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s ease;
+}
+
+/* Zoom ảnh */
+.product-card:hover img {
+  transform: scale(1.12);
+}
+
+/* BADGE DISCOUNT */
+.product-discount-badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  background: linear-gradient(135deg, #ff4444, #cc0000);
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(255, 68, 68, 0.35);
+}
+
+/* BADGE SOLD OUT */
+.product-sold-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  padding: 5px 11px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+/* PRODUCT RATING */
+.product-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: $gold;
+  margin-bottom: 8px;
+}
+
+.product-rating-count {
+  font-size: 11px;
+  color: #999;
+  margin-left: 4px;
+}
+
+/* TRANG CHU — REAL RATING BLOCK */
+.tc-product-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+  border-top: 1px solid #f0f0f0;
+  background: rgba(183, 28, 28, 0.04);
+  border-radius: 0 0 12px 12px;
+
+  .tc-stars {
+    font-size: 14px;
+    color: #f4b400;
+    letter-spacing: 1px;
+  }
+
+  .tc-meta {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .tc-score {
+    font-size: 11px;
+    color: #8b1a2e;
+    font-weight: 800;
+  }
+
+  .tc-dot {
+    font-size: 10px;
+    color: #bbb;
+  }
+
+  .tc-count {
+    font-size: 11px;
+    color: #777;
+    font-weight: 600;
+  }
+
+  .tc-no-review {
+    font-size: 12px;
+    color: #aaa;
+    font-weight: 500;
+  }
+}
+
+/* ===== ICON ACTIONS ===== */
+.product-actions {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translate(-50%, 20px);
+
+  display: flex;
+  gap: 12px;
+
+  opacity: 0;
+  transition: all 0.35s ease;
+  z-index: 15;
+}
+.product-image-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: 0.4s ease;
+  border-radius: 22px 22px 0 0;
+}
+
+.product-card:hover .product-image-container::after {
+  opacity: 1;
+}
+/* Hover card thì icon hiện */
+.product-card:hover .product-actions {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+/* Button tròn */
+.action-btn {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: none;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #fff;
+  color: $main-red;
+  font-size: 16px;
+  cursor: pointer;
+
+  box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+  transition: all 0.3s ease;
+}
+
+/* Hover icon */
+.action-btn:hover {
+  background: $main-red;
+  color: #fff;
+  transform: scale(1.15);
+  box-shadow: 0 10px 25px rgba(183, 28, 28, 0.4);
+}
+
+.product-card h3 {
+  padding: 20px 16px 6px;
+  font-size: 15px;
+  text-align: center;
+  font-weight: 600;
+  color: #222;
+  line-height: 1.4;
+  min-height: 44px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.product-card .price {
+  padding: 6px 16px 18px;
+  text-align: center;
+  font-size: 18px;
+  font-weight: 800;
+  color: $main-red;
+}
+
+.product-card .price span {
+  font-size: 12px;
+  color: #999;
+  text-decoration: line-through;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+/* ======================================================
+   MEMORIES
+====================================================== */
+.memories-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.memories-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: 220px;
+  gap: 18px;
+}
+
+.memory-item {
+  border-radius: 20px;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.memory-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: 0.6s;
+}
+
+.memory-item:hover img {
+  transform: scale(1.12);
+}
+
+.item-large {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.item-wide {
+  grid-column: span 2;
+}
+
+/* ======================================================
+   TESTIMONIAL
+====================================================== */
+.testimonial-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 35px;
+}
+
+.testimonial-card {
+  @extend .card;
+  text-align: center;
+}
+
+.testimonial-card img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  margin: auto auto 15px;
+}
+
+.stars {
+  color: $gold;
+  margin-bottom: 10px;
+}
+
+.testimonial-card p {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 14px;
+}
+
+.testimonial-card h4 {
+  font-size: 16px;
+}
+
+.testimonial-card span {
+  font-size: 13px;
+  color: #888;
+}
+
+/* ======================================================
+   CONSULT
+====================================================== */
+.consult-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+}
+
+.consult-form-box {
+  @extend .card;
+}
+
+.consult-form {
+  display: grid;
+  gap: 16px;
+}
+
+.consult-form input,
+.consult-form select,
+.consult-form textarea {
+  padding: 14px 18px;
+  border-radius: 14px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.consult-form input:focus,
+.consult-form select:focus,
+.consult-form textarea:focus {
+  outline: none;
+  border-color: $main-red;
+}
+
+.consult-btn {
+  margin-top: 10px;
+  background: $gradient-main;
+  border: none;
+  color: #fff;
+  padding: 15px;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.consult-image img {
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  object-fit: cover;
+}
+
+/* ======================================================
+   PREVIEW IMAGE
+====================================================== */
+.image-preview-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  animation: fadeIn 0.35s ease;
+}
+
+.image-preview-overlay img {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 18px;
+  animation: zoomIn 0.35s ease;
+}
+
+.close-btn {
+  position: absolute;
+  top: 30px;
+  right: 40px;
+  font-size: 28px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ======================================================
+   ANIMATION
+====================================================== */
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes zoomIn {
+  from { transform: scale(0.85) }
+  to { transform: scale(1) }
+}
+
+/* ======================================================
+   RESPONSIVE
+====================================================== */
+@media (max-width: 991px) {
+  .commit-grid,
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .testimonial-list {
+    grid-template-columns: 1fr;
+  }
+
+  .consult-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .memories-header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .product-card h3 {
+    font-size: 14px;
+    padding: 16px 12px 4px;
+  }
+
+  .product-card .price {
+    padding: 4px 12px 14px;
+    font-size: 16px;
+  }
+
+  .action-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 14px;
+  }
+
+  .team-info-modal {
+    padding: 20px;
+
+    h3 {
+      font-size: 24px;
+      padding-right: 30px;
+    }
+  }
+
+  .team-members {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 576px) {
+  .commit-wrapper,
+  .memories-wrapper,
+  .testimonial-wrapper {
+    padding: 35px 22px;
+  }
+
+  h2 {
+    font-size: 26px;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .product-card {
+    padding: 0;
+  }
+
+  .product-image-container {
+    height: 220px;
+  }
+
+  .product-card h3 {
+    font-size: 13px;
+    padding: 14px 12px 3px;
+  }
+
+  .product-card .price {
+    padding: 3px 12px 12px;
+    font-size: 14px;
+  }
+
+  .view-all-btn {
+    padding: 6px 14px;
+    font-size: 11px;
+  }
+}
+/* ======================================================
+   FORCE TOÀN BỘ TIÊU ĐỀ MÀU ĐỎ (SANG TRỌNG)
+====================================================== */
+
+/* tất cả heading */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: $main-red !important;
+}
+
+/* tiêu đề trong các section cụ thể */
+.commit-header h2,
+.memories-header h2,
+.testimonial-header h2,
+.product-list h2,
+.consult-form-box h2 {
+  color: $main-red !important;
+}
+
+/* span trong tiêu đề cũng đỏ luôn */
+.commit-header h2 span,
+.memories-header h2 span,
+.product-list h2 span,
+.consult-form-box h2 span {
+  color: $main-red !important;
+}
+/* ======================================================
+   PRODUCT TITLE – TO & CĂN GIỮA
+====================================================== */
+
+.product-list h2 {
+  text-align: center;
+  font-size: 42px;
+  font-weight: 800;
+  margin-bottom: 32px;
+  letter-spacing: 0.5px;
+  color: $main-red;
+}
+
+.product-list h2 span {
+  color: $gold;
+}
+/* ======================================================
+   CHECKBOX ĐIỀU KHOẢN – NHỎ GỌN & CAO CẤP
+====================================================== */
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 13px;      /* 👈 nhỏ hơn */
+  color: #555;
+  line-height: 1.5;
+}
+
+/* checkbox */
+.terms-checkbox input[type="checkbox"] {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  accent-color: $main-red; /* đồng bộ màu đỏ */
+  cursor: pointer;
+}
+/* ======================================================
+   CHECKBOX ĐIỀU KHOẢN – NHỎ GỌN & SANG TRỌNG
+====================================================== */
+
+.terms-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;                 /* 👈 sát hơn */
+  font-size: 12.5px;        /* 👈 nhỏ hơn chữ thường */
+  color: #666;
+  line-height: 1.5;
+  margin-top: 8px;
+  cursor: pointer;
+
+  span {
+    max-width: 100%;
+  }
+
+  a {
+    color: $main-red;
+    font-weight: 500;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+/* checkbox */
+.terms-checkbox input[type="checkbox"] {
+  width: 13px;              /* 👈 nhỏ hơn nữa */
+  height: 13px;
+  margin-top: 2px;
+  accent-color: $main-red;
+  cursor: pointer;
+}
+
+
+.view-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 8px 20px;
+  border-radius: 999px;
+
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  background: $gradient-main;
+  color: #fff;
+
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  box-shadow: 0 6px 18px rgba(183, 28, 28, 0.25);
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.view-all-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 28px rgba(183, 28, 28, 0.35);
+}
+
+.view-all-btn:active {
+  transform: translateY(0);
+}
+
+.view-all-btn .arrow {
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.view-all-btn:hover .arrow {
+  transform: translateX(4px);
+}
+
+.view-all-btn,
+.view-all-btn:link,
+.view-all-btn:visited,
+.view-all-btn:hover,
+.view-all-btn:active {
+  text-decoration: none !important;
+  color: #fff !important;
+}
+/* ================= Scroll Reveal PRO ================= */
+
+/* Section cha */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.reveal.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ================= Card animation ================= */
+
+/* Card mặc định */
+.reveal .reveal-item {
+  opacity: 0;
+  transform: translateX(-40px) scale(0.95);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+/* Khi section show → card chạy */
+.reveal.show .reveal-item {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+}
+/* ======================================
+   SECTION TITLE
+====================================== */
+
+
+.section-title span {
+  display: block;
+  font-size: 54px;     // 👈 chữ dưới to hơn cho nổi bật
+  font-weight: 900;
+  color: $gold;
+  margin-top: 10px;
+}
+.section-title {
+  position: relative;
+  text-align: center;
+  font-size: 56px;     // 👈 to giống trên
+  font-weight: 900;
+  letter-spacing: 1px;
+  margin-bottom: 60px;
+  color: $main-red;
+}
+
+.section-title::after {
+  content: "";
+  width: 90px;
+  height: 4px;
+  background: $main-red;
+  position: absolute;
+  left: 50%;
+  bottom: -15px;
+  transform: translateX(-50%);
+  border-radius: 4px;
+}
+
+/* Delay so le */
+.reveal.show .reveal-item:nth-child(1) { transition-delay: 0.1s; }
+.reveal.show .reveal-item:nth-child(2) { transition-delay: 0.2s; }
+.reveal.show .reveal-item:nth-child(3) { transition-delay: 0.3s; }
+.reveal.show .reveal-item:nth-child(4) { transition-delay: 0.4s; }
+.reveal.show .reveal-item:nth-child(5) { transition-delay: 0.5s; }
+.reveal.show .reveal-item:nth-child(6) { transition-delay: 0.6s; }
+.reveal.show .reveal-item:nth-child(7) { transition-delay: 0.7s; }
+.reveal.show .reveal-item:nth-child(8) { transition-delay: 0.8s; }
+
+
+.booked-date-warning {
+  margin: -6px 0 4px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(220, 38, 38, 0.1);
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 600;
+}

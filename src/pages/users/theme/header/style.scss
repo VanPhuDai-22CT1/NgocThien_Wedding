@@ -1,0 +1,649 @@
+/* ================= RESET ================= */
+/* ================= THEME PINK ================= */
+$pink-dark: #ad1457;
+$pink-main: #d81b60;
+$pink-light: #ec407a;
+$pink-soft: #fff1f6;
+$pink-shadow: rgba(216, 27, 96, 0.35);
+$pink-focus: rgba(216, 27, 96, 0.25);
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Roboto", "Segoe UI", Arial, sans-serif;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+ul {
+  list-style: none;
+}
+
+/* ================= HEADER TOP ================= */
+.header__top {
+  background: linear-gradient(90deg, #7b1e1e, #c73636);
+  color: #fff;
+  font-size: 14px;
+
+  &-inner {
+    max-width: 1300px;
+    margin: auto;
+    padding: 12px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  &-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-weight: 600;
+  }
+
+  &-right {
+    display: flex;
+    gap: 16px;
+
+    a,
+    button {
+      background: none;
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      transition: color 0.25s ease;
+
+      &:hover {
+        color: #ffd700;
+      }
+    }
+  }
+}
+
+/* ================= HEADER MAIN ================= */
+.header__main {
+  background: #fff;
+  border-bottom: 1px solid #eee;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+
+  &-inner {
+    max-width: 1400px;
+    margin: auto;
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+/* ================= MENU ================= */
+.header__menu ul {
+  display: flex;
+  gap: 34px;
+
+  .menu-item {
+    position: relative;
+  }
+
+  li a {
+    font-weight: 600;
+    position: relative;
+    padding-bottom: 6px;
+    color: #000;
+    transition: color 0.25s ease;
+
+    &::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      width: 0;
+      height: 2px;
+       background: $pink-main;
+      transition: width 0.3s ease;
+    }
+
+    &:hover {
+      color: #b02a2a;
+
+      &::after {
+        width: 100%;
+      }
+    }
+  }
+}
+
+.menu-item--services {
+  .service-dropdown {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 14px);
+    transform: translateX(-50%) translateY(8px);
+    width: 680px;
+    max-width: min(92vw, 680px);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+    padding: 20px;
+    border-radius: 16px;
+    border: 1px solid rgba(123, 30, 30, 0.12);
+    background: linear-gradient(145deg, #ffffff 0%, #fff8f8 100%);
+    box-shadow: 0 20px 45px rgba(123, 30, 30, 0.16);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.22s ease;
+    z-index: 120;
+
+    &::before {
+      content: "";
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      width: 14px;
+      height: 14px;
+      background: #fff;
+      border-left: 1px solid rgba(123, 30, 30, 0.12);
+      border-top: 1px solid rgba(123, 30, 30, 0.12);
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    &__group {
+      h4 {
+        margin: 0 0 10px;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #7b1e1e;
+      }
+
+      ul {
+        display: grid;
+        gap: 8px;
+      }
+
+      li button {
+        width: 100%;
+        border: 1px solid rgba(123, 30, 30, 0.08);
+        background: #fff;
+        border-radius: 10px;
+        padding: 10px 12px;
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: #2f2f2f;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          border-color: rgba(176, 42, 42, 0.35);
+          background: #fff2f2;
+          color: #b02a2a;
+          transform: translateX(2px);
+        }
+      }
+    }
+  }
+
+  &:hover .service-dropdown,
+  &:focus-within .service-dropdown {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ================= SEARCH ================= */
+.header__search {
+  display: flex;
+  border: 1px solid #ddd;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #fafafa;
+  transition: box-shadow 0.3s ease;
+
+  &:focus-within {
+    box-shadow: 0 0 0 2px rgba(176, 42, 42, 0.25);
+  }
+
+  input {
+    border: none;
+    padding: 12px 18px;
+    outline: none;
+    min-width: 220px;
+    background: transparent;
+  }
+
+  button {
+    background: linear-gradient(135deg, #7b1e1e, #b02a2a);
+    color: #fff;
+    border: none;
+    padding: 0 22px;
+    cursor: pointer;
+    transition: opacity 0.25s ease;
+
+    &:hover {
+      opacity: 0.85;
+    }
+  }
+}
+
+/* ================= HERO ================= */
+.hero {
+  padding: 50px 0;
+  background: linear-gradient(#fafafa, #f3f3f3);
+
+  &__inner {
+    max-width: 1400px;
+    margin: auto;
+    padding: 0 24px;
+    display: flex;
+    gap: 32px;
+  }
+}
+
+/* ================= DANH SÁCH DỊCH VỤ ================= */
+.hero__categories {
+  width: 220px;
+  background: #fff;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+  transition: all 0.35s ease;
+
+  &__all {
+    background: linear-gradient(135deg, #7b1e1e, #b02a2a);
+    color: #fff;
+    padding: 18px 22px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    letter-spacing: 0.3px;
+  }
+
+  ul li {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    &:hover {
+      background: #fff1f1;
+      color: #b02a2a;
+      padding-left: 30px;
+    }
+  }
+
+  &.is-hidden {
+    width: 0;
+    min-width: 0;
+    opacity: 0;
+    overflow: hidden;
+    box-shadow: none;
+  }
+
+  &.is-hidden * {
+    display: none;
+  }
+}
+
+/* ================= HERO MAIN ================= */
+.hero__main {
+  flex: 1;
+  background:
+    linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.45)),
+    url("../../../../assets/users/images/hero/nennen.jpg")
+      20% 15%  / cover no-repeat;
+  border-radius: 24px;
+  padding: 60px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.18);
+}
+
+
+/* ================= HERO CONTENT ================= */
+.hero__content {
+  color: #fff;
+  flex: 1;
+
+  .hero__badge {
+    background: #ffd700;
+    color: #7b1e1e;
+    padding: 8px 18px;
+    border-radius: 999px;
+    font-weight: 700;
+    display: inline-block;
+    margin-bottom: 18px;
+    letter-spacing: 0.5px;
+  }
+
+  h2 {
+    font-size: 44px;
+    line-height: 1.2;
+    margin-bottom: 18px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.7;
+    opacity: 0.95;
+    margin-bottom: 30px;
+  }
+}
+
+/* ================= TIÊU ĐỀ WEDDING (LUÔN ĐỎ) ================= */
+.wedding-title {
+  color: #ffff !important;
+  font-weight: 800;
+  text-shadow: 0 4px 14px rgba(176, 42, 42, 0.45);
+}
+.header__logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #b80b0b; // đen than – sáng, không gắt
+  margin: 0;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    color: #7b1e1e; // đỏ rượu vang nhẹ (rất sang)
+  }
+}
+
+/* ================= HERO IMAGE ================= */
+.hero__image {
+  flex: 1;
+
+  img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 991px) {
+  .header__menu {
+    display: none;
+  }
+
+  .hero__inner {
+    flex-direction: column;
+  }
+
+  .hero__categories {
+    width: 100%;
+  }
+
+  .hero__categories.is-hidden {
+    display: none;
+  }
+
+  .hero__main {
+    flex-direction: column;
+    text-align: center;
+    padding: 36px 26px;
+  }
+}
+
+/* ================= BUTTON 3D ================= */
+.btn-3d {
+  position: relative;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  outline-offset: 4px;
+  transition: filter 250ms;
+  user-select: none;
+  touch-action: manipulation;
+}
+
+.btn-3d .shadow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 14px;
+  background: hsl(0deg 0% 0% / 0.25);
+  transform: translateY(3px);
+  transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+}
+
+.btn-3d .edge {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  background: linear-gradient(
+    to left,
+    hsl(340deg 100% 16%) 0%,
+    hsl(340deg 100% 32%) 8%,
+    hsl(340deg 100% 32%) 92%,
+    hsl(340deg 100% 16%) 100%
+  );
+}
+
+.btn-3d .front {
+  position: relative;
+  padding: 14px 34px;
+  border-radius: 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #fff;
+  background: hsl(345deg 100% 47%);
+  transform: translateY(-5px);
+  transition: transform 600ms cubic-bezier(.3, .7, .4, 1);
+}
+
+.btn-3d:hover {
+  filter: brightness(110%);
+}
+
+.btn-3d:hover .front {
+  transform: translateY(-7px);
+}
+
+.btn-3d:active .front {
+  transform: translateY(-2px);
+}
+
+.btn-3d:hover .shadow {
+  transform: translateY(5px);
+}
+
+.btn-3d:active .shadow {
+  transform: translateY(1px);
+}
+
+.btn-3d:focus:not(:focus-visible) {
+  outline: none;
+}
+button {
+ position: relative;
+ border: none;
+ background: transparent;
+ padding: 0;
+ cursor: pointer;
+ outline-offset: 4px;
+ transition: filter 250ms;
+ user-select: none;
+ touch-action: manipulation;
+}
+
+.shadow {
+ position: absolute;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ border-radius: 12px;
+ background: hsl(0deg 0% 0% / 0.25);
+ will-change: transform;
+ transform: translateY(2px);
+ transition: transform
+    600ms
+    cubic-bezier(.3, .7, .4, 1);
+}
+
+.edge {
+ position: absolute;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ border-radius: 12px;
+ background: linear-gradient(
+    to left,
+    hsl(340deg 100% 16%) 0%,
+    hsl(340deg 100% 32%) 8%,
+    hsl(340deg 100% 32%) 92%,
+    hsl(340deg 100% 16%) 100%
+  );
+}
+
+.front {
+ display: block;
+ position: relative;
+ padding: 12px 27px;
+ border-radius: 12px;
+ font-size: 1.1rem;
+ color: white;
+ background: hsl(345deg 100% 47%);
+ will-change: transform;
+ transform: translateY(-4px);
+ transition: transform
+    600ms
+    cubic-bezier(.3, .7, .4, 1);
+}
+
+button:hover {
+ filter: brightness(110%);
+}
+
+button:hover .front {
+ transform: translateY(-6px);
+ transition: transform
+    250ms
+    cubic-bezier(.3, .7, .4, 1.5);
+}
+
+button:active .front {
+ transform: translateY(-2px);
+ transition: transform 34ms;
+}
+
+button:hover .shadow {
+ transform: translateY(4px);
+ transition: transform
+    250ms
+    cubic-bezier(.3, .7, .4, 1.5);
+}
+
+button:active .shadow {
+ transform: translateY(1px);
+ transition: transform 34ms;
+}
+
+button:focus:not(:focus-visible) {
+ outline: none;
+}
+.hero__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 16px;
+  animation: fadeHero 0.8s ease-in-out;
+}
+
+@keyframes fadeHero {
+  from {
+    opacity: 0.4;
+    transform: scale(1.03);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.user-dropdown {
+  position: relative;
+
+  .user-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f6c343, #f2a900); 
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: 0.3s;
+
+    &:hover {
+      background: #a81020;
+    }
+  }
+
+  .user-menu {
+    position: absolute;
+    top: 46px;
+    right: 0;
+    width: 170px;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+    overflow: hidden;
+    z-index: 1000;
+
+    button {
+      width: 100%;
+      padding: 12px 14px;
+      border: none;
+      background: none;
+      text-align: left;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+
+      color: #000;              // ✅ chữ đen mặc định
+      transition: all 0.25s ease;
+
+      svg {
+        color: #000;            // ✅ icon đen mặc định
+        transition: color 0.25s;
+      }
+
+      &:hover {
+        background: #f5f5f5;
+        color: #c4162a;         // ✅ hover chữ đỏ
+
+        svg {
+          color: #c4162a;       // ✅ hover icon đỏ
+        }
+      }
+    }
+  }
+}

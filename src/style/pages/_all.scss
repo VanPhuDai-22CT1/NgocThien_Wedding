@@ -1,0 +1,232 @@
+@use "sass:map";
+@import "theme";
+@import "responsive";
+
+/* ===== RESET & BASE ===== */
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-size: 15px;
+  color: #333;
+  background-color: #fff;
+  line-height: 1.55;
+  text-rendering: optimizeLegibility;
+}
+
+/* ===== CONTAINER ===== */
+.container {
+  max-width: 1170px;
+  width: 100%;
+  padding-left: 15px;
+  padding-right: 15px;
+  margin: 0 auto;
+}
+
+/* ===== GRID SYSTEM ===== */
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+[class*="col-"] {
+  padding-left: 15px;
+  padding-right: 15px;
+}
+
+.col-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+.col-lg-3 {
+  flex: 0 0 25%;
+  max-width: 25%;
+}
+
+.col-lg-4 {
+  flex: 0 0 33.333333%;
+  max-width: 33.333333%;
+}
+
+.col-lg-6 {
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+.col-lg-9 {
+  flex: 0 0 75%;
+  max-width: 75%;
+}
+
+/* ===== SECTION TITLE ===== */
+.section-title {
+  margin-bottom: 50px;
+  text-align: center;
+
+  h2 {
+    position: relative;
+    font-size: clamp(24px, 3vw, 32px);
+    font-weight: 700;
+    color: map.get($theme-colors, "main");
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+  }
+
+  h2::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    bottom: -15px;
+    width: 80px;
+    height: 4px;
+    background: map.get($theme-colors, "main");
+    border-radius: 5px;
+  }
+}
+
+/* ===== FORM ===== */
+input,
+textarea {
+  width: 100%;
+  height: 42px;
+  border: 1px solid #e5e5e5;
+  padding: 0 12px;
+  font-size: 14px;
+  color: #555;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+
+  &:focus {
+    outline: none;
+    border-color: map.get($theme-colors, "main");
+    box-shadow: 0 0 0 2px rgba(176, 42, 42, 0.15);
+  }
+}
+
+textarea {
+  height: auto;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+/* ===== BUTTON ===== */
+.button-submit {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 14px 30px;
+  background: map.get($theme-colors, "main");
+  color: #fff;
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: darken(map.get($theme-colors, "main"), 8%);
+    transform: translateY(-1px);
+  }
+}
+
+img,
+svg,
+input,
+button,
+textarea,
+select {
+  max-width: 100%;
+}
+
+/* ===== UTILITY ===== */
+.pl-pr-10 {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* ===== RESPONSIVE ===== */
+@include Responsive($DESKTOP) {
+  .col-xl-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+  }
+
+  .col-xl-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+}
+
+@include Responsive($MEDIUM_DEVICE) {
+  .container {
+    max-width: 960px;
+  }
+
+  .col-xl-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+@include Responsive($TABLET_DEVICE) {
+  .container {
+    max-width: 720px;
+  }
+
+  .col-md-4 {
+    flex: 0 0 33.333333%;
+    max-width: 33.333333%;
+  }
+
+  .col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .col-md-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+@include Responsive($WIDE_MOBILE) {
+  .container {
+    max-width: 540px;
+  }
+
+  .col-sm-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+  }
+
+  .col-sm-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}
+
+@include Responsive($SMALL_DEVICES) {
+  .container {
+    max-width: 360px;
+  }
+
+  .col-xs-12 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+}

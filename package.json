@@ -1,0 +1,77 @@
+{
+  "name": "vanphudai",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@babel/core": "^7.25.2",
+    "@babel/plugin-syntax-flow": "^7.24.7",
+    "@babel/plugin-transform-react-jsx": "^7.25.2",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.13.6",
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.3",
+    "chart.js": "^4.5.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "framer-motion": "^12.35.0",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+    "mysql": "^2.18.1",
+    "mysql2": "^3.11.4",
+    "qrcode": "^1.5.4",
+    "react": "^18.2.0",
+    "react-chartjs-2": "^5.3.1",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.6.0",
+    "react-multi-carousel": "^2.6.1",
+    "react-router-dom": "^6.28.0",
+    "react-tabs": "^6.0.2",
+    "react-toastify": "^11.0.5",
+    "typescript": "^4.9.5",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "start:admin": "set REACT_APP_API_URL=http://localhost:4000/api && set PORT=3001 && react-app-rewired start",
+    "start:user": "set REACT_APP_API_URL=http://localhost:4000/api && set PORT=3000 && react-app-rewired start",
+    "start:all": "concurrently \"cd backend && npm run dev\" \"npm run start:admin\" \"npm run start:user\"",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^7.6.0",
+    "kill-port": "^2.0.1",
+    "react-app-rewired": "^2.2.1",
+    "react-scripts": "^5.0.1",
+    "sass": "^1.97.3",
+    "sass-loader": "^16.0.3"
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "app.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}

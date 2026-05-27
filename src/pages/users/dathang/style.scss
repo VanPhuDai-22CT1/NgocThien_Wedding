@@ -1,0 +1,213 @@
+/* ===============================
+   DON HANG – TONE RED #b71c1c
+================================ */
+
+$order-red: #b71c1c;
+$bg-light: #f7f7f7;
+$text-dark: #333;
+
+/* ===== NỀN NGOÀI (ĂN KHỚP VỚI KHUNG) ===== */
+.order-wrapper {
+  min-height: 100vh;
+  background: #f3f3f3; /* ✅ cùng tông với viền khung */
+  display: flex;
+  justify-content: center;
+  padding: 32px 16px;
+}
+
+/* 👉 KHUNG NGOÀI (THU NHỎ LẠI) */
+.order-container {
+  width: 100%;
+  max-width: 560px; /* 🔥 chỉnh nhỏ ở đây */
+}
+
+/* ===== KHUNG NỘI DUNG ===== */
+.order-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px 22px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1);
+
+  h2 {
+    text-align: center;
+    color: $order-red;
+    margin-bottom: 22px;
+    font-size: 22px;
+    font-weight: 700;
+  }
+}
+
+/* ===== DANH SÁCH SẢN PHẨM ===== */
+.order-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+
+.order-item {
+  background: $bg-light;
+  border-radius: 10px;
+  padding: 14px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .name {
+      font-weight: 600;
+      color: $text-dark;
+      font-size: 15px;
+    }
+
+    .qty {
+      font-size: 13px;
+      color: #777;
+    }
+  }
+
+  .item-price {
+    font-weight: 700;
+    color: $order-red;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+}
+
+/* ===== TỔNG TIỀN ===== */
+.order-total {
+  border-top: 2px dashed #ddd;
+  padding-top: 16px;
+  margin-bottom: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  span {
+    font-size: 15px;
+    color: #555;
+  }
+
+  strong {
+    font-size: 20px;
+    color: $order-red;
+  }
+}
+
+/* ===== NÚT XÁC NHẬN ===== */
+.btn-confirm {
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #b71c1c, #d32f2f);
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(183, 28, 28, 0.35);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+
+  &:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+/* ===== DATE AVAILABILITY HINT ===== */
+.date-hint {
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+
+  &.checking {
+    color: #7a6200;
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+  }
+
+  &.available {
+    color: #256329;
+    background: #f0fff4;
+    border: 1px solid #b7ebc0;
+  }
+
+  &.full {
+    color: #9b1c1c;
+    background: #fff5f5;
+    border: 1px solid #fca5a5;
+  }
+}
+
+.order-form {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  input,
+  textarea {
+    width: 100%;
+    border: 1px solid #e4e4e4;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    outline: none;
+
+    &:focus {
+      border-color: #b71c1c;
+      box-shadow: 0 0 0 3px rgba(183, 28, 28, 0.12);
+    }
+  }
+
+    .payment-method-box {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin: 4px 0 2px;
+
+      label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        color: #333;
+      }
+    }
+}
+
+.booked-warning {
+  margin: -2px 0 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(183, 28, 28, 0.1);
+  color: #9d1c1c;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* ===== MOBILE ===== */
+@media (max-width: 480px) {
+  .order-card {
+    padding: 20px 18px;
+  }
+
+  .order-container {
+    max-width: 100%;
+  }
+}

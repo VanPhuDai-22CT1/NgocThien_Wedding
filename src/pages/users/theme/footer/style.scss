@@ -1,0 +1,211 @@
+@use "sass:map";
+@import "style/pages/theme";
+
+/* =========================
+   FOOTER WRAPPER
+========================= */
+.footer {
+  background: #f3f6fa;
+  padding: 60px 0 30px;
+  margin-top: 40px;
+}
+
+/* =========================
+   FOOTER ABOUT
+========================= */
+.footer__about {
+  ul {
+    padding: 0;
+    margin-bottom: 15px;
+
+    li {
+      list-style: none;
+      font-size: 15px;
+      line-height: 32px;
+      color: map.get($theme-colors, "normal-text");
+    }
+  }
+}
+
+/* =========================
+   SOCIAL ICONS (CHUẨN)
+========================= */
+.footer__social {
+  display: flex;
+  gap: 12px;
+  margin-top: 15px;
+
+  a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+
+    svg {
+      font-size: 18px;
+      color: #555;
+      transition: color 0.3s ease;
+    }
+
+    &:hover {
+      transform: translateY(-2px);
+
+      svg {
+        color: #fff;
+      }
+    }
+
+    &.fb:hover {
+      background: #1877f2;
+      border-color: #1877f2;
+    }
+
+    &.yt:hover {
+      background: #ff0000;
+      border-color: #ff0000;
+    }
+
+    &.ig:hover {
+      background: linear-gradient(
+        45deg,
+        #f58529,
+        #dd2a7b,
+        #8134af,
+        #515bd4
+      );
+      border-color: #dd2a7b;
+    }
+
+    &.tt:hover {
+      background: #000000;
+      border-color: #000000;
+    }
+  }
+}
+
+/* =========================
+   FOOTER WIDGET
+========================= */
+.footer__widget {
+  margin-bottom: 30px;
+  overflow: hidden;
+
+  h6 {
+    color: map.get($theme-colors, "normal-text");
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  ul {
+    float: left;
+    width: 50%;
+    padding: 0;
+
+    li {
+      list-style: none;
+      line-height: 32px;
+      font-size: 14px;
+      color: map.get($theme-colors, "normal-text");
+    }
+  }
+
+  /* ===== FORM ===== */
+  form {
+    margin-top: 15px;
+
+    .input-group {
+      display: flex;
+      align-items: center;
+
+      input {
+        width: 100%;
+        height: 46px;
+        padding-left: 15px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+        outline: none;
+      }
+
+      button {
+        height: 46px;
+        padding: 0 22px;
+        background: #e53935;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:hover {
+          background: #c62828;
+        }
+      }
+    }
+
+    .input-group-nested {
+      position: relative;
+      border: 1px solid #e4e7ec;
+      border-radius: 999px;
+      background: #fff;
+      padding: 4px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+
+      input {
+        height: 42px;
+        border: 0;
+        border-radius: 999px;
+        padding: 0 132px 0 14px;
+        font-size: 13px;
+        background: transparent;
+
+        &:focus {
+          outline: none;
+        }
+      }
+
+      .button-submit {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        height: 42px;
+        border-radius: 999px;
+        padding: 0 18px;
+        background: linear-gradient(135deg, #e53935, #c62828);
+        color: #fff;
+        font-weight: 700;
+        font-size: 12px;
+        letter-spacing: 0.3px;
+      }
+    }
+  }
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .footer__widget ul {
+    width: 100%;
+  }
+
+  .footer__social {
+    justify-content: flex-start;
+  }
+
+  .footer__widget form .input-group-nested {
+    input {
+      padding-right: 118px;
+      font-size: 12px;
+    }
+
+    .button-submit {
+      padding: 0 14px;
+      font-size: 11px;
+    }
+  }
+}

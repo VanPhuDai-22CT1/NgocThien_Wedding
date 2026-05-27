@@ -1,0 +1,73 @@
+@use "sass:map";
+@import "style/pages/theme";
+
+.breadcrumb {
+  position: relative;
+  padding: 70px 0 60px;
+  text-align: center;
+  background: linear-gradient(
+    135deg,
+    map.get($theme-colors, "main"),
+    darken(map.get($theme-colors, "main"), 10%)
+  );
+  overflow: hidden;
+
+  /* overlay mờ */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    z-index: 0;
+  }
+
+  .breadcrumb_text {
+    position: relative;
+    z-index: 1;
+
+    h2 {
+      font-size: 42px;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: 3px;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .breadcrumb__option {
+      ul {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 12px;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+
+        li {
+          font-size: 14px;
+          color: rgba(255, 255, 255, 0.85);
+          position: relative;
+
+          a {
+            text-decoration: none;
+            color: #fff;
+            font-weight: 600;
+            transition: all 0.3s ease;
+
+            &:hover {
+              color: map.get($theme-colors, "description");
+            }
+          }
+
+          /* dấu / */
+          &:not(:last-child)::after {
+            content: "/";
+            margin-left: 12px;
+            color: rgba(255, 255, 255, 0.6);
+          }
+        }
+      }
+    }
+  }
+}

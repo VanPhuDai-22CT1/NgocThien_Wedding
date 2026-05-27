@@ -1,0 +1,79 @@
+@use "sass:map";
+@import "style/pages/all";
+
+.featured__item {
+    margin-bottom: 50px;
+
+    .featured__item__pic {
+        height: 270px;
+        position: relative;
+        overflow: hidden;
+        background-position: center;
+        background-size: cover;
+        border-radius: 8px;
+
+        .featured__item__pic__hover {
+            position: absolute;
+            left: 0;
+            top: 90%; /* Đặt icon hiển thị bên trên hình ảnh */
+            width: 100%;
+            text-align: center;
+            opacity: 1; /* Đảm bảo icon luôn hiển thị */
+            padding-top: 10px;
+            transition: top 0.3s ease-in-out, opacity 0.3s ease-in-out;
+
+            li {
+                list-style: none;
+                display: inline-block;
+                margin-right: 15px;
+
+                &:hover {
+                    svg {
+                        background: rgb(183, 65, 145);
+                        border-color: rgb(183, 65, 145);
+                        color: #ffffff;
+                        transform: scale(1.2); /* Phóng to nhẹ khi hover */
+                    }
+                }
+
+                svg {
+                    padding: 12px;
+                    height: 40px; /* Tăng kích thước icon */
+                    width: 40px;
+                    border: 1px solid #ebebeb;
+                    background: #ffffff;
+                    color: #565555;
+                    transition: all 0.3s ease-in-out;
+                    border-radius: 50%;
+                    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Thêm bóng cho icon */
+                }
+            }
+        }
+    }
+
+    .featured__item__text {
+        text-align: center;
+
+        h6 {
+            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 400;
+
+            a {
+                color: map.get($theme-colors, "normal-text");
+                text-decoration: none;
+
+                &:hover {
+                    color: rgb(183, 65, 145); /* Đổi màu text khi hover */
+                }
+            }
+        }
+
+        h5 {
+            color: map.get($theme-colors, "normal-text");
+            font-size: 18px;
+            font-weight: 700;
+            margin-top: 10px;
+        }
+    }
+}

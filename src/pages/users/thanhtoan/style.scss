@@ -1,0 +1,363 @@
+$crimson: #8b1a2e;
+$gold: #b38a5a;
+
+.payment-wrapper {
+  min-height: 100vh;
+  padding: 44px 18px 64px;
+  background:
+    radial-gradient(ellipse 80% 45% at 10% 0%, rgba(139, 26, 46, 0.07), transparent),
+    radial-gradient(ellipse 60% 35% at 100% 100%, rgba(179, 138, 90, 0.08), transparent),
+    linear-gradient(180deg, #fff8f3 0%, #fffdf9 100%);
+  display: flex;
+  justify-content: center;
+}
+
+.payment-card {
+  width: min(980px, 100%);
+  background: #fff;
+  border-radius: 26px;
+  padding: 34px 32px 30px;
+  border: 1px solid rgba(179, 138, 90, 0.24);
+  box-shadow: 0 26px 60px rgba(70, 24, 32, 0.14);
+
+  h2 {
+    margin: 0;
+    text-align: center;
+    color: $crimson;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 36px;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+
+    &::before {
+      content: "✦  Ngọc Thiện Wedding  ✦";
+      display: block;
+      margin-bottom: 10px;
+      font-family: "Segoe UI", sans-serif;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: $gold;
+    }
+  }
+}
+
+.payment-subtitle {
+  margin: 10px 0 26px;
+  text-align: center;
+  font-size: 14px;
+  color: #7b5c5f;
+}
+
+.payment-summary-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 20px;
+}
+
+.confirm-box {
+  background: linear-gradient(180deg, #fffdfb 0%, #fff8f4 100%);
+  border: 1px solid rgba(179, 138, 90, 0.2);
+  border-radius: 18px;
+  padding: 18px 18px 16px;
+
+  .confirm-icon {
+    font-size: 24px;
+    color: #2f8c4f;
+    margin-bottom: 10px;
+  }
+
+  h3 {
+    margin: 0 0 12px;
+    color: #3f262a;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  p {
+    margin: 0;
+    color: #5f4a4d;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+}
+
+.info-list {
+  display: grid;
+  gap: 8px;
+
+  p {
+    display: flex;
+    gap: 8px;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.78);
+    border: 1px solid rgba(179, 138, 90, 0.12);
+  }
+
+  strong {
+    color: #331b1f;
+    min-width: 145px;
+  }
+
+  span {
+    text-align: right;
+    color: #5f4a4d;
+    word-break: break-word;
+  }
+}
+
+.service-list {
+  display: grid;
+  gap: 8px;
+}
+
+.service-item {
+  display: grid;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(179, 138, 90, 0.12);
+}
+
+.service-name {
+  color: #362125;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.service-meta {
+  color: #7a5b4f;
+  font-size: 13px;
+}
+
+.total-price {
+  margin-top: 12px !important;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(179, 138, 90, 0.45);
+  color: $crimson !important;
+  font-size: 16px !important;
+  font-weight: 700;
+}
+
+.deposit-price {
+  margin-top: 8px !important;
+  color: #0f4aa8 !important;
+  font-size: 14px !important;
+  font-weight: 700;
+}
+
+.payment-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 4px 0 22px;
+
+  label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(179, 138, 90, 0.24);
+    cursor: pointer;
+    background: #fff;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+
+    input {
+      display: none;
+    }
+
+    .pay-icon {
+      font-size: 24px;
+      color: $crimson;
+      min-width: 28px;
+    }
+
+    strong {
+      font-size: 15px;
+      color: #321e22;
+      display: block;
+    }
+
+    p {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: #7d6862;
+    }
+
+    &:hover {
+      border-color: rgba(139, 26, 46, 0.5);
+      transform: translateY(-1px);
+      box-shadow: 0 10px 22px rgba(70, 24, 32, 0.09);
+    }
+
+    &.active {
+      border-color: rgba(139, 26, 46, 0.55);
+      background: #fff5f6;
+      box-shadow: 0 10px 24px rgba(139, 26, 46, 0.15);
+    }
+  }
+}
+
+.qr-box {
+  margin: -4px 0 22px;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(179, 138, 90, 0.24);
+  background: linear-gradient(180deg, #fffdfb 0%, #fff7f2 100%);
+
+  h3 {
+    margin: 0;
+    color: #3a2025;
+    font-size: 18px;
+    font-weight: 700;
+  }
+}
+
+.qr-note {
+  margin: 8px 0 14px;
+  font-size: 13px;
+  color: #7f6460;
+}
+
+.qr-content {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.qr-image {
+  width: 100%;
+  max-width: 210px;
+  border-radius: 12px;
+  border: 1px solid rgba(179, 138, 90, 0.3);
+  background: #fff;
+  padding: 8px;
+}
+
+.qr-meta {
+  display: grid;
+  gap: 8px;
+
+  p {
+    margin: 0;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(179, 138, 90, 0.14);
+    color: #5f4a4d;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  strong {
+    color: #311a1e;
+  }
+}
+
+.confirm-actions {
+  display: grid;
+  grid-template-columns: 170px 1fr;
+  gap: 12px;
+
+  button {
+    height: 46px;
+    border-radius: 14px;
+    border: none;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+  }
+}
+
+.btn-main {
+  background: linear-gradient(135deg, $crimson, #b7304c);
+  color: #fff;
+  box-shadow: 0 10px 24px rgba(139, 26, 46, 0.28);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 16px 26px rgba(139, 26, 46, 0.34);
+  }
+}
+
+.btn-outline {
+  background: #fff;
+  color: $crimson;
+  border: 1px solid rgba(139, 26, 46, 0.44) !important;
+
+  &:hover:not(:disabled) {
+    background: #fff6f6;
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 980px) {
+  .payment-card {
+    padding: 26px 18px 22px;
+
+    h2 {
+      font-size: 30px;
+    }
+  }
+
+  .payment-summary-grid,
+  .payment-options {
+    grid-template-columns: 1fr;
+  }
+
+  .confirm-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-content {
+    grid-template-columns: 1fr;
+  }
+
+  .qr-image {
+    max-width: 220px;
+  }
+}
+
+@media (max-width: 560px) {
+  .payment-wrapper {
+    padding: 30px 12px 44px;
+  }
+
+  .payment-card h2 {
+    font-size: 26px;
+  }
+
+  .payment-subtitle {
+    font-size: 13px;
+  }
+
+  .info-list p {
+    display: block;
+
+    strong {
+      display: block;
+      margin-bottom: 3px;
+      min-width: 0;
+    }
+
+    span {
+      text-align: left;
+    }
+  }
+}

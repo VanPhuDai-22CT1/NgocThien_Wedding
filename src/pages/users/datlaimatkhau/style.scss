@@ -1,0 +1,92 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.number-container {
+  background: #fff;
+  padding: 30px 40px;
+  border-radius: 12px;
+  text-align: center;
+  min-width: 280px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  animation: scaleIn 0.3s ease-in-out;
+
+  p {
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: #333;
+  }
+
+  .numbers {
+    font-size: 34px;
+    font-weight: bold;
+    letter-spacing: 6px;
+    color: #e63946;
+    margin: 15px 0;
+  }
+
+  .copy-btn {
+    padding: 10px 22px;
+    border: none;
+    background: #1d3557;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: 0.25s;
+
+    &:hover {
+      background: #16324f;
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.85);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .number-container {
+    min-width: 90%;
+    padding: 25px;
+  }
+
+  .numbers {
+    font-size: 28px;
+    letter-spacing: 4px;
+  }
+}
+.login-image {
+  text-align: center;
+  margin-bottom: 15px;
+}
+
+.login-image img {
+  width: 220px;
+  height: auto;
+  object-fit: contain;
+}

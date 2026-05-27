@@ -1,0 +1,188 @@
+/* =========================
+   CART CONTAINER
+========================= */
+.cart {
+  max-width: 1100px; /* RỘNG HƠN */
+  margin: 50px auto;
+  padding: 32px;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   TITLE
+========================= */
+.cart-title {
+  margin-bottom: 32px;
+  font-size: 28px;
+  font-weight: 700;
+  color: #c62828;
+  text-align: center;
+}
+
+/* =========================
+   TABLE
+========================= */
+.cart-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 32px;
+
+  thead {
+    background: #f1f3f4;
+  }
+
+  th {
+    padding: 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e0e0e0;
+    text-align: center;
+  }
+
+  td {
+    padding: 16px;
+    font-size: 15px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    text-align: center;
+  }
+
+  tbody tr:hover {
+    background: #fafafa;
+  }
+}
+
+/* =========================
+   REMOVE BUTTON
+========================= */
+.remove-btn {
+  background: #c62828;
+  color: #fff;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #8e0000;
+  }
+}
+
+/* =========================
+   FOOTER
+========================= */
+.cart-footer {
+  margin-top: 36px;
+}
+
+/* =========================
+   SUMMARY
+========================= */
+.cart-summary {
+  background: #fff3f3;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 32px;
+
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 16px;
+    color: #444;
+    margin-bottom: 14px;
+
+    &.total {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px dashed #e0b4b4;
+      font-size: 22px;
+      font-weight: 700;
+      color: #c62828;
+    }
+  }
+}
+
+/* =========================
+   ACTION BUTTONS – FIX CỨNG
+========================= */
+.cart-actions {
+  display: flex;
+  gap: 28px;
+  width: 100%;
+}
+
+/* BUTTON CHUNG */
+.cart-btn {
+  flex: 1;                 /* 🔥 ÉP BẰNG NHAU */
+  height: 60px;
+  width: 100%;
+
+  border-radius: 16px;
+  font-size: 17px;
+  font-weight: 600;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  white-space: nowrap;
+  padding: 0;
+
+  transition: all 0.25s ease;
+}
+
+/* OUTLINE */
+.cart-btn.outline {
+  background: #ffffff;
+  color: #c62828;
+  border: 2px solid #c62828;
+
+  &:hover {
+    background: #c62828;
+    color: #ffffff;
+  }
+}
+
+/* PRIMARY */
+.cart-btn.primary {
+  background: #3498db;
+  color: #ffffff;
+  border: 2px solid #3498db;
+  box-shadow: 0 8px 22px rgba(52, 152, 219, 0.35);
+
+  &:hover {
+    background: #2c80c9;
+  }
+}
+
+/* =========================
+   EMPTY CART
+========================= */
+.empty-cart {
+  text-align: center;
+  font-size: 17px;
+  color: #777;
+  margin: 80px 0;
+}
+
+/* =========================
+   RESPONSIVE
+========================= */
+@media (max-width: 768px) {
+  .cart {
+    padding: 20px;
+  }
+
+  .cart-actions {
+    flex-direction: column;
+  }
+}

@@ -1,0 +1,6 @@
+{
+    "name": "hp/cnpm22ct1_vanphudai",
+    "require": {
+        "phpoffice/phpspreadsheet": "^5.5"
+    }
+}

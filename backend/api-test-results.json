@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-05-12T05:27:27.038Z",
+  "tests": [
+    {
+      "name": "GET Products",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getProducts",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": []
+      },
+      "timestamp": "2026-05-12T05:27:27.067Z"
+    },
+    {
+      "name": "GET Consultations",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getConsultations",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": [
+          {
+            "id": 2,
+            "user_id": null,
+            "name": "Test User",
+            "email": "test@example.com",
+            "phone": "0123456789",
+            "service": "",
+            "event_date": null,
+            "note": "",
+            "status": "pending",
+            "is_read": false,
+            "created_at": "2026-05-12T05:22:45.000Z",
+            "updated_at": "2026-05-12T05:22:45.000Z"
+          },
+          {
+            "id": 1,
+            "user_id": null,
+            "name": "Test User",
+            "email": "test@example.com",
+            "phone": "0123456789",
+            "service": "",
+            "event_date": null,
+            "note": "",
+            "status": "pending",
+            "is_read": false,
+            "created_at": "2026-05-12T05:21:38.000Z",
+            "updated_at": "2026-05-12T05:21:38.000Z"
+          }
+        ]
+      },
+      "timestamp": "2026-05-12T05:27:27.071Z"
+    },
+    {
+      "name": "POST Add Consultation",
+      "method": "POST",
+      "url": "http://localhost:4000/api/legacy?action=addConsultation",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": {
+          "created_at": "2026-05-12T05:27:27.073Z",
+          "updated_at": "2026-05-12T05:27:27.073Z",
+          "id": 3,
+          "user_id": null,
+          "name": "Test User",
+          "email": "test@example.com",
+          "phone": "0123456789",
+          "service": "",
+          "event_date": null,
+          "note": "",
+          "status": "pending",
+          "is_read": false
+        }
+      },
+      "timestamp": "2026-05-12T05:27:27.078Z"
+    },
+    {
+      "name": "GET Live Chat Sessions",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getLiveChatSessions",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": []
+      },
+      "timestamp": "2026-05-12T05:27:27.080Z"
+    },
+    {
+      "name": "GET Orders",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getOrders",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "orders": []
+      },
+      "timestamp": "2026-05-12T05:27:27.085Z"
+    },
+    {
+      "name": "GET Users",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getUsers",
+      "status": 200,
+      "passed": true,
+      "body": [],
+      "timestamp": "2026-05-12T05:27:27.087Z"
+    },
+    {
+      "name": "GET Dashboard Stats",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getDashboardStats",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "total_users": 0,
+        "total_products": 0,
+        "total_orders": 0,
+        "total_revenue": 0,
+        "completed_orders": 0,
+        "pending_orders": 0,
+        "cancelled_orders": 0,
+        "months": [],
+        "monthly_revenue": []
+      },
+      "timestamp": "2026-05-12T05:27:27.096Z"
+    },
+    {
+      "name": "GET Activity Logs",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getActivityLogs",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": []
+      },
+      "timestamp": "2026-05-12T05:27:27.099Z"
+    },
+    {
+      "name": "GET Cart",
+      "method": "GET",
+      "url": "http://localhost:4000/api/legacy?action=getCart",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": [],
+        "cart": []
+      },
+      "timestamp": "2026-05-12T05:27:27.102Z"
+    },
+    {
+      "name": "GET Homepage Config",
+      "method": "GET",
+      "url": "http://localhost:4000/api/homepage-config",
+      "status": 200,
+      "passed": true,
+      "body": {
+        "success": true,
+        "data": {
+          "galleryImages": [],
+          "consultImage": "",
+          "headerSliderImages": [],
+          "heroBackgroundImage": "",
+          "imageHistory": {
+            "gallery": [
+              [],
+              [],
+              [],
+              [],
+              [],
+              [],
+              []
+            ],
+            "consult": [],
+            "headerSlider": [
+              [],
+              [],
+              []
+            ],
+            "heroBackground": []
+          }
+        }
+      },
+      "timestamp": "2026-05-12T05:27:27.105Z"
+    }
+  ],
+  "summary": {
+    "passed": 10,
+    "failed": 0,
+    "total": 10
+  }
+}

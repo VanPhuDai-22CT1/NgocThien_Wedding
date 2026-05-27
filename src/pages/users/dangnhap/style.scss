@@ -1,0 +1,188 @@
+/* ========================= */
+/* VARIABLES */
+/* ========================= */
+$primary-color: #d32f2f;
+$primary-dark: #b71c1c;
+$text-color: #333;
+$border-color: #ddd;
+$white: #fff;
+
+/* ========================= */
+/* RESET */
+/* ========================= */
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+}
+
+/* ========================= */
+/* LOGIN PAGE */
+/* ========================= */
+.login-page {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.25);
+    backdrop-filter: blur(4px);
+  }
+}
+
+/* ========================= */
+/* LOGIN FORM */
+/* ========================= */
+.login-form {
+  position: relative;
+  width: 420px;
+  padding: 40px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  display: flex;
+  flex-direction: column;
+  z-index: 1;
+
+  h2 {
+    text-align: center;
+    color: $primary-color;
+    margin-bottom: 30px;
+    font-weight: 600;
+  }
+
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+
+  input {
+    height: 48px;
+    padding: 0 14px;
+    margin-bottom: 18px;
+    border-radius: 10px;
+    border: 1px solid $border-color;
+    font-size: 15px;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: $primary-color;
+      box-shadow: 0 0 0 3px rgba($primary-color, 0.15);
+    }
+  }
+
+  button {
+    height: 48px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+
+  button[type="submit"] {
+    background: linear-gradient(135deg, $primary-color, $primary-dark);
+    color: $white;
+    border: none;
+
+    &:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba($primary-color, 0.3);
+    }
+  }
+}
+
+/* ========================= */
+/* LOGO */
+/* ========================= */
+.login-image {
+  text-align: center;
+  margin-bottom: 20px;
+
+  img {
+    width: 170px;
+    object-fit: contain;
+  }
+}
+
+/* ========================= */
+/* NÚT ĐĂNG KÝ */
+/* ========================= */
+.btn-register {
+  margin-top: 14px;
+  background: transparent;
+  color: $primary-color;
+  border: 2px solid $primary-color;
+
+  &:hover {
+    background: $primary-color;
+    color: $white;
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba($primary-color, 0.25);
+  }
+}
+
+/* ========================= */
+/* THÔNG BÁO LỖI */
+/* ========================= */
+.error-message {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 14px;
+  color: $primary-color;
+  font-weight: 500;
+}
+
+/* ========================= */
+/* LINK DƯỚI FORM */
+/* ========================= */
+.bottom-links {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;  // nằm giữa
+  align-items: center;
+  gap: 14px;                // sát nhau
+}
+
+/* ========================= */
+/* LINK DƯỚI FORM */
+/* ========================= */
+.bottom-links {
+  margin-top: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+/* Trở về trang chủ - màu đen */
+.back-home-text {
+  font-size: 14px;
+  color: #000;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Quên mật khẩu - màu đỏ */
+.forgot-password-text {
+  font-size: 14px;
+  color: $primary-color;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    color: $primary-dark;
+    text-decoration: underline;
+  }
+}

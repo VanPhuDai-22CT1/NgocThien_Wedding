@@ -1,0 +1,142 @@
+/* ========================= */
+/* VARIABLES */
+/* ========================= */
+$primary: #d32f2f;
+$primary-dark: #b71c1c;
+$white: #ffffff;
+$border: #ddd;
+
+/* ========================= */
+/* FULL PAGE */
+/* ========================= */
+.forgot-page {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ========================= */
+/* BOX CHÍNH */
+/* ========================= */
+.forgot-box {
+  width: 460px;
+  background: $white;
+  border-radius: 18px;
+  padding: 45px 40px;
+  text-align: center;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.4s ease;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center; // ✅ căn giữa toàn bộ nội dung
+}
+
+/* ========================= */
+/* LOGO */
+/* ========================= */
+.forgot-logo {
+  width: 190px;
+  margin-bottom: 20px;
+  display: block;
+}
+
+/* ========================= */
+/* TITLE */
+/* ========================= */
+.forgot-box h2 {
+  color: $primary;
+  margin-bottom: 30px;
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* ========================= */
+/* FORM */
+/* ========================= */
+.forgot-box form {
+  width: 100%;
+}
+
+/* ========================= */
+/* INPUT */
+/* ========================= */
+.forgot-box input {
+  width: 100%;
+  padding: 14px;
+  font-size: 15px;
+  border-radius: 10px;
+  border: 1px solid $border;
+  margin-bottom: 20px;
+  outline: none;
+  transition: 0.3s;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 3px rgba($primary, 0.15);
+  }
+}
+
+/* ========================= */
+/* BUTTON CHÍNH */
+/* ========================= */
+.forgot-box form button {
+  width: 100%;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 600;
+  background: linear-gradient(135deg, $primary, $primary-dark);
+  color: $white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba($primary, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+/* ========================= */
+/* NÚT QUAY LẠI */
+/* ========================= */
+.back-btn {
+  margin-top: 20px;
+  background: none;
+  color: $primary;
+  border: none;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.3s;
+
+  &:hover {
+    color: $primary-dark;
+    text-decoration: underline;
+  }
+}
+
+/* ========================= */
+/* ANIMATION */
+/* ========================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
