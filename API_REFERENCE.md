@@ -4,6 +4,8 @@
 **Version:** 1.0  
 **Last Updated:** 2026-05-12
 
+> Note: Admin-only legacy actions (`getUsers`, `getOrders`, `getActivityLogs`, `deleteUser`, `updateUserRole`, etc.) require a valid JWT with `role: 'admin'` sent in the `Authorization: Bearer <token>` header. The server will return `401` if no token is provided and `403` if the token does not grant admin role.
+
 ---
 
 ## Table of Contents
