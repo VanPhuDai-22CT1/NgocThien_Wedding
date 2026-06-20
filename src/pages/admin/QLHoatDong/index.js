@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { NavLink, useNavigate } from "react-router-dom";
 import { createPortal } from "react-dom";
 import { getAuthItem } from "utils/authStorage";
@@ -83,13 +84,7 @@ const QLHoatDong = () => {
     try {
       setLoading(true);
 
-      const res = await axios.get(
-        `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`,
-        {
-          params: { action: "getActivityLogs" },
-          withCredentials: true,
-        }
-      );
+      const res = await apiClient.get(`/legacy`, { params: { action: "getActivityLogs" }, headers: buildAuthHeaders() });
 
       if (res.data?.success) {
         setLogs(res.data.data || []);
@@ -158,13 +153,6 @@ const QLHoatDong = () => {
             <FaHistory /> Lịch sử
           </NavLink>
 
-          <NavLink to="/thong-ke">
-            <FaChartPie /> Thống kê
-          </NavLink>
-
-          <NavLink to="/admin/ho-so-nguoi-code">
-            <FaUsers /> Hồ sơ người code
-          </NavLink>
         </nav>
       </div>
 

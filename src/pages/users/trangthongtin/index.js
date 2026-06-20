@@ -2,10 +2,12 @@ import React, { useCallback, useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ROUTERS } from "utils/router";
-import { getAuthItem } from "utils/authStorage";
+import { getAuthItem, setAuthItem } from "utils/authStorage";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
+import { getImageUrl } from "utils/image";
 import "./style.scss";
 
-const API_URL = "http://localhost:4000/api/legacy";
+const API_URL = "/api/legacy";
 const MAX_AVATAR_SIZE = 2 * 1024 * 1024;
 
 const normalizeAvatarUrl = (avatarPath = "") => {
@@ -15,15 +17,12 @@ const normalizeAvatarUrl = (avatarPath = "") => {
     return raw;
   }
 
-  const baseUrl = API_URL.replace(/\/api\.php$/i, "");
-  if (raw.startsWith("uploads/")) {
-    return `${baseUrl}/${raw.replace(/^\/+/, "")}`;
-  }
-  return `${baseUrl}/uploads/${raw.replace(/^\/+/, "")}`;
+  return getImageUrl(raw);
 };
 
 const buildInitialInfo = (data = {}) => ({
   username: data.username || "",
+  full_name: data.full_name || data.username || "",
   email: data.email || "",
   phone: data.phone || "",
   address: data.address || "",
@@ -33,7 +32,8 @@ const buildInitialInfo = (data = {}) => ({
 const UserInfo = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const userId = getAuthItem("user_id");
+  const storedUserId = getAuthItem("user_id");
+  const token = getAuthItem("token");
 
   const [user, setUser] = useState(null);
   const [updatedInfo, setUpdatedInfo] = useState(buildInitialInfo());
@@ -53,6 +53,11 @@ const UserInfo = () => {
     setUser(userData);
     setUpdatedInfo(buildInitialInfo(userData));
     setAvatarPreview(normalizeAvatarUrl(userData.avatar));
+
+    if (userData?.id) setAuthItem("user_id", userData.id);
+    if (userData?.username) setAuthItem("username", userData.username);
+    if (userData?.email) setAuthItem("email", userData.email);
+    if (userData?.role) setAuthItem("role", userData.role);
   }, []);
 
   const fetchUser = useCallback(async ({ silent = false } = {}) => {
@@ -61,12 +66,25 @@ const UserInfo = () => {
     }
 
     try {
-      const res = await axios.post(API_URL, {
-        action: "getUser",
-        user_id: userId,
-      }, {
-        withCredentials: true,
-      });
+      let res = null;
+
+      if (token) {
+        try {
+          res = await apiClient.get("/auth/me", { headers: buildAuthHeaders() });
+        } catch (authError) {
+          if (!storedUserId) throw authError;
+        }
+      }
+
+      if ((!res?.data?.success || !res?.data?.data) && storedUserId) {
+        res = await axios.get(API_URL, {
+          params: {
+            action: "getUser",
+            user_id: storedUserId,
+          },
+          withCredentials: true,
+        });
+      }
 
       if (res?.data?.success && res?.data?.data) {
         syncUserData(res.data.data);
@@ -89,16 +107,16 @@ const UserInfo = () => {
         setLoading(false);
       }
     }
-  }, [syncUserData, userId]);
+  }, [storedUserId, syncUserData, token]);
 
   useEffect(() => {
-    if (!userId) {
+    if (!storedUserId && !token) {
       navigate(ROUTERS.USER.LOGIN, { replace: true });
       return;
     }
 
     fetchUser();
-  }, [fetchUser, navigate, userId]);
+  }, [fetchUser, navigate, storedUserId, token]);
 
   useEffect(() => {
     return () => {
@@ -150,9 +168,9 @@ const UserInfo = () => {
   };
 
   const handleUpdateUserInfo = async () => {
-    const { username, email, phone, address } = updatedInfo;
-    if (!username.trim() || !email.trim() || !phone.trim() || !address.trim()) {
-      setFeedback({ type: "error", text: "Vui lòng nhập đầy đủ thông tin." });
+    const { username, full_name, email, phone, address } = updatedInfo;
+    if (!full_name.trim() || !email.trim()) {
+      setFeedback({ type: "error", text: "Vui lòng nhập họ tên và email để hoàn thiện hồ sơ cưới." });
       return;
     }
 
@@ -163,15 +181,16 @@ const UserInfo = () => {
     }
 
     const phoneRegex = /^[0-9+\s().-]{9,15}$/;
-    if (!phoneRegex.test(phone.trim())) {
+    if (phone.trim() && !phoneRegex.test(phone.trim())) {
       setFeedback({ type: "error", text: "Số điện thoại không hợp lệ." });
       return;
     }
 
     const formData = new FormData();
     formData.append("action", "updateUserInfo");
-    formData.append("user_id", userId);
-    formData.append("username", username.trim());
+    formData.append("user_id", user?.id || storedUserId);
+    formData.append("username", username.trim() || email.trim());
+    formData.append("full_name", full_name.trim());
     formData.append("email", email.trim());
     formData.append("phone", phone.trim());
     formData.append("address", address.trim());
@@ -183,7 +202,7 @@ const UserInfo = () => {
       setSaving(true);
       const res = await axios.post(API_URL, formData, {
         withCredentials: true,
-        headers: { "Content-Type": "multipart/form-data" },
+        headers: { "Content-Type": "multipart/form-data", ...buildAuthHeaders() },
       })
 
       if (res?.data?.success) {
@@ -194,7 +213,7 @@ const UserInfo = () => {
         }
         setIsEditing(false);
         setAvatarFile(null);
-        setFeedback({ type: "success", text: "Cập nhật thông tin thành công." });
+        setFeedback({ type: "success", text: "Cập nhật hồ sơ cưới thành công." });
         if (fileInputRef.current) {
           fileInputRef.current.value = "";
         }
@@ -214,6 +233,7 @@ const UserInfo = () => {
   const formAvatar = avatarPreview || normalizeAvatarUrl(updatedInfo.avatar) || "/default-avatar.png";
   const profileFields = [
     updatedInfo.username,
+    updatedInfo.full_name,
     updatedInfo.email,
     updatedInfo.phone,
     updatedInfo.address,
@@ -224,7 +244,7 @@ const UserInfo = () => {
   );
   const normalizedRole = String(user?.role || "member").toLowerCase();
   const roleLabel = normalizedRole === "admin" ? "Quản trị viên" : "Thành viên";
-  const accountCode = `KH-${String(user?.id || userId || "").padStart(4, "0")}`;
+  const accountCode = `KH-${String(user?.id || storedUserId || "").padStart(4, "0")}`;
 
   if (loading) {
     return (
@@ -252,10 +272,10 @@ const UserInfo = () => {
       <div className="customer-info-card">
         <header className="customer-info-header">
           <div>
-            <p className="breadcrumb">Trang chủ / Tài khoản / Hồ sơ</p>
-            <p className="overline">Tài khoản của tôi</p>
-            <h2>Thông tin khách hàng</h2>
-            <p className="subtitle">Quản lý hồ sơ để giao hàng nhanh và chính xác hơn.</p>
+            <p className="breadcrumb">Trang chủ / Tài khoản / Hồ sơ cưới</p>
+            <p className="overline">Không gian cưới của tôi</p>
+            <h2>Thông tin cô dâu chú rể</h2>
+            <p className="subtitle">Lưu thông tin liên hệ, địa điểm tổ chức và phong cách để Ngọc Thiện Wedding tư vấn trọn vẹn hơn.</p>
           </div>
           <div className="header-meta">
             <span>Ngày cập nhật: {todayLabel}</span>
@@ -288,15 +308,15 @@ const UserInfo = () => {
                 <p className="avatar-note">Định dạng JPG/PNG, tối đa 2MB.</p>
               </>
             ) : (
-              <p className="avatar-note">Ảnh đại diện hiển thị ở trang tài khoản và đơn hàng.</p>
+              <p className="avatar-note">Ảnh đại diện giúp đội ngũ tư vấn nhận diện hồ sơ cưới của bạn nhanh hơn.</p>
             )}
 
             <div className="helper-box">
-              <h5>Gợi ý nhanh</h5>
+              <h5>Gợi ý cho ngày cưới</h5>
               <ul>
-                <li>Cập nhật đúng số điện thoại để shipper liên hệ nhanh.</li>
-                <li>Địa chỉ càng chi tiết thì giao hàng càng chính xác.</li>
-                <li>Ảnh đại diện giúp dễ nhận diện tài khoản của bạn.</li>
+                <li>Cập nhật đúng số điện thoại để tư vấn viên liên hệ kịp thời.</li>
+                <li>Ghi rõ địa điểm tổ chức để đội ngũ chuẩn bị phương án trang trí phù hợp.</li>
+                <li>Ảnh đại diện có thể là ảnh cặp đôi hoặc ảnh phong cách cưới bạn yêu thích.</li>
               </ul>
             </div>
           </aside>
@@ -304,16 +324,16 @@ const UserInfo = () => {
           <div className="profile-content">
             <div className="account-highlight-row">
               <article className="highlight-card">
-                <p>Mã khách hàng</p>
+                <p>Mã hồ sơ</p>
                 <h4>{accountCode}</h4>
               </article>
               <article className="highlight-card">
-                <p>Hạng tài khoản</p>
+                <p>Vai trò</p>
                 <h4>{roleLabel}</h4>
               </article>
               <article className="highlight-card highlight-card-progress">
                 <div className="progress-header">
-                  <p>Hồ sơ hoàn thiện</p>
+                  <p>Hồ sơ cưới hoàn thiện</p>
                   <strong>{profileCompletion}%</strong>
                 </div>
                 <div className="profile-progress-track">
@@ -332,11 +352,11 @@ const UserInfo = () => {
               <div className="form-group">
                 <label>Họ và tên</label>
                 <input
-                  name="username"
-                  value={updatedInfo.username}
+                  name="full_name"
+                  value={updatedInfo.full_name}
                   readOnly={!isEditing}
                   onChange={handleInputChange}
-                  placeholder="Nhập họ và tên"
+                  placeholder="Nhập họ tên cô dâu/chú rể"
                 />
               </div>
 
@@ -364,13 +384,13 @@ const UserInfo = () => {
               </div>
 
               <div className="form-group full-width">
-                <label>Địa chỉ nhận hàng</label>
+                <label>Địa điểm tổ chức</label>
                 <textarea
                   name="address"
                   value={updatedInfo.address}
                   readOnly={!isEditing}
                   onChange={handleInputChange}
-                  placeholder="Nhập địa chỉ giao hàng"
+                  placeholder="Nhập địa điểm tổ chức tiệc cưới hoặc lễ gia tiên"
                 />
               </div>
             </div>
@@ -391,7 +411,7 @@ const UserInfo = () => {
                     Chỉnh sửa thông tin
                   </button>
                   <button className="btn-outline" type="button" onClick={() => navigate(ROUTERS.USER.OrderDetail)}>
-                    Xem đơn hàng
+                    Xem lịch sử đặt dịch vụ
                   </button>
                 </>
               )}

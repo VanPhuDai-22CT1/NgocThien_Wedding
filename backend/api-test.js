@@ -9,6 +9,8 @@ const https = require('https');
 const fs = require('fs');
 const path = require('path');
 const FormData = require('form-data');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
+const jwt = require('jsonwebtoken');
 
 const API_BASE = 'http://localhost:4000/api';
 const RESULTS_FILE = path.join(__dirname, 'api-test-results.json');
@@ -62,12 +64,12 @@ function makeRequest(method, url, body = null, headers = {}) {
 }
 
 // Test runner
-async function runTest(name, method, url, body = null) {
+async function runTest(name, method, url, body = null, headers = {}) {
   console.log(`\n▶ Testing: ${name}`);
   console.log(`  ${method} ${url}`);
   
   try {
-    const response = await makeRequest(method, url, body);
+    const response = await makeRequest(method, url, body, headers);
     const passed = response.status >= 200 && response.status < 300;
     
     const result = {
@@ -126,11 +128,21 @@ async function runTests() {
   // Consultations
   await runTest('GET Consultations', 'GET', `${legacyBase}?action=getConsultations`);
   
+  // Prepare admin token if possible
+  let adminToken = null;
+  try {
+    if (process.env.JWT_SECRET) {
+      adminToken = jwt.sign({ id: 1, username: 'admin', role: 'admin' }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
+    }
+  } catch (e) {
+    // ignore
+  }
+
   await runTest('POST Add Consultation', 'POST', `${legacyBase}?action=addConsultation`, {
     name: 'Test User',
     email: 'test@example.com',
     phone: '0123456789',
-    message: 'Test consultation message',
+    service: 'wedding',
     user_id: null
   });
 
@@ -138,16 +150,16 @@ async function runTests() {
   await runTest('GET Live Chat Sessions', 'GET', `${legacyBase}?action=getLiveChatSessions`);
 
   // Orders
-  await runTest('GET Orders', 'GET', `${legacyBase}?action=getOrders`);
+  await runTest('GET Orders', 'GET', `${legacyBase}?action=getOrders`, null, adminToken ? { Authorization: `Bearer ${adminToken}` } : {});
 
   // Users
-  await runTest('GET Users', 'GET', `${legacyBase}?action=getUsers`);
+  await runTest('GET Users', 'GET', `${legacyBase}?action=getUsers`, null, adminToken ? { Authorization: `Bearer ${adminToken}` } : {});
 
   // Dashboard Stats
   await runTest('GET Dashboard Stats', 'GET', `${legacyBase}?action=getDashboardStats`);
 
   // Activity Logs
-  await runTest('GET Activity Logs', 'GET', `${legacyBase}?action=getActivityLogs`);
+  await runTest('GET Activity Logs', 'GET', `${legacyBase}?action=getActivityLogs`, null, adminToken ? { Authorization: `Bearer ${adminToken}` } : {});
 
   // Shopping Cart
   await runTest('GET Cart', 'GET', `${legacyBase}?action=getCart`);

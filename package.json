@@ -35,13 +35,14 @@
   },
   "scripts": {
     "start": "react-app-rewired start",
-    "start:admin": "set REACT_APP_API_URL=http://localhost:4000/api && set PORT=3001 && react-app-rewired start",
-    "start:user": "set REACT_APP_API_URL=http://localhost:4000/api && set PORT=3000 && react-app-rewired start",
+    "start:admin": "set PORT=3001 && set REACT_APP_APP_MODE=admin && react-app-rewired start",
+    "start:user": "set PORT=3000 && react-app-rewired start",
     "start:all": "concurrently \"cd backend && npm run dev\" \"npm run start:admin\" \"npm run start:user\"",
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-scripts eject"
   },
+  "proxy": "http://localhost:5000",
   "eslintConfig": {
     "extends": [
       "react-app",

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { NavLink, useNavigate } from "react-router-dom";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import { getDarkMode, setDarkModeStorage } from "utils/darkMode";
 import {
   FaArrowLeft,
@@ -19,7 +20,7 @@ import {
 } from "react-icons/fa";
 import "./style.scss";
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
+const API = `${process.env.REACT_APP_API_URL || "/api"}/legacy`;
 
 export default function OrderManagement() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function OrderManagement() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API}?action=getOrders`);
+      const res = await apiClient.get(`/legacy`, { params: { action: "getOrders" }, headers: buildAuthHeaders() });
 
       if (res.data?.success) {
         setOrders(res.data.orders || []);
@@ -60,11 +61,7 @@ export default function OrderManagement() {
   const updateStatus = async (orderId, status) => {
     try {
       setLoading(true);
-      await axios.post(API, {
-        action: "updateStatus",
-        order_id: orderId,
-        status,
-      });
+      await apiClient.post("/legacy", { action: "updateStatus", order_id: orderId, status }, { headers: buildAuthHeaders() });
       fetchOrders();
     } catch (err) {
       alert("Lỗi cập nhật");
@@ -80,10 +77,7 @@ const deleteOrder = async (orderId) => {
   try {
     setLoading(true);
 
-    const res = await axios.post(API, {
-      action: "deleteOrder",
-      order_id: orderId,
-    });
+    const res = await apiClient.post("/legacy", { action: "deleteOrder", order_id: orderId }, { headers: buildAuthHeaders() });
 
     if (res.data?.success) {
       alert("Đã xóa thành công");
@@ -101,8 +95,7 @@ const deleteOrder = async (orderId) => {
 };
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
   };
 
   const formatMoney = (value) =>
@@ -224,13 +217,6 @@ const deleteOrder = async (orderId) => {
             <FaHistory /> Lịch sử
           </NavLink>
 
-          <NavLink to="/thong-ke">
-            <FaChartPie /> Thống kê
-          </NavLink>
-
-          <NavLink to="/admin/ho-so-nguoi-code">
-            <FaUsers /> Hồ sơ người code
-          </NavLink>
         </nav>
 
         <div className="sidebar-footer">

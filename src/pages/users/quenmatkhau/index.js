@@ -29,7 +29,7 @@ const QuenMatKhauStandalone = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:4000/api/legacy",
+        "/api/legacy",
         {
           action: "forgotPassword",
           email,
@@ -68,7 +68,7 @@ const QuenMatKhauStandalone = () => {
       setLoading(true);
 
       const res = await axios.post(
-        "http://localhost:4000/api/legacy",
+        "/api/legacy",
         {
           action: "verifyOtp",
           email,

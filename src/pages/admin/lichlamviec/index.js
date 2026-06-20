@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { getAuthItem, clearAuthSession } from "utils/authStorage";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import {
   FaArrowLeft,
   FaBell,
@@ -16,7 +17,7 @@ import {
 } from "react-icons/fa";
 import "./style.scss";
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
+const API = `${process.env.REACT_APP_API_URL || "/api"}/legacy`;
 const WEEK_DAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
 const toDateKey = (dateValue) => {
@@ -46,30 +47,8 @@ export default function WorkScheduleManagement() {
     try {
       setLoading(true);
       setApiError("");
-      const res = await fetch(`${API}?action=getConsultations`);
-
-      const rawText = await res.text();
-      let data;
-
-      try {
-        data = JSON.parse(rawText);
-      } catch (parseError) {
-        const preview = String(rawText || "")
-          .replace(/<[^>]*>/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 120);
-
-        throw new Error(
-          preview
-            ? `API không trả JSON hợp lệ. Nội dung nhận được: ${preview}`
-            : "API không trả JSON hợp lệ."
-        );
-      }
-
-      if (!res.ok) {
-        throw new Error(data?.message || `Lỗi HTTP ${res.status}`);
-      }
+      const res = await apiClient.get(`/legacy`, { params: { action: "getConsultations" }, headers: buildAuthHeaders() });
+      const data = res.data || {};
 
       if (data?.success) {
         setConsultations(Array.isArray(data.data) ? data.data : []);
@@ -190,8 +169,7 @@ export default function WorkScheduleManagement() {
   }, [currentMonth]);
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
   };
 
   return (
@@ -238,13 +216,6 @@ export default function WorkScheduleManagement() {
             <FaHistory /> Lịch sử
           </NavLink>
 
-          <NavLink to="/thong-ke">
-            <FaChartPie /> Thống kê
-          </NavLink>
-
-          <NavLink to="/admin/ho-so-nguoi-code">
-            <FaUsers /> Hồ sơ người code
-          </NavLink>
         </nav>
 
         <button type="button" className="logout-btn" onClick={logout}>

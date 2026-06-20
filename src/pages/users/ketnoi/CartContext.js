@@ -7,7 +7,7 @@ export const CartProvider = ({ children }) => {
 
     const addToCart = (item) => {
         // Cập nhật giỏ hàng trong CSDL (có thể gọi API ở đây)
-        fetch('http://localhost:4000/api/legacy', {
+        fetch('/api/legacy', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

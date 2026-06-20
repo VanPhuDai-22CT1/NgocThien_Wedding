@@ -10,6 +10,7 @@ class User extends Model {
   public full_name!: string;
   public phone!: string;
   public address!: string;
+  public avatar!: string;
   public role!: 'user' | 'admin';
   public is_active!: boolean;
   public created_at!: Date;
@@ -51,6 +52,10 @@ User.init(
     },
     address: {
       type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    avatar: {
+      type: DataTypes.STRING(255),
       allowNull: true,
     },
     role: {

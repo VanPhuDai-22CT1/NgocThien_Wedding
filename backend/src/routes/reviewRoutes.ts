@@ -8,7 +8,7 @@ router.get('/product/:productId', (req, res) =>
   ReviewController.getProductReviews(req, res)
 );
 
-router.post('/', (req, res) => ReviewController.addReview(req, res));
+router.post('/', authMiddleware, (req, res) => ReviewController.addReview(req, res));
 router.delete('/:id', authMiddleware, adminMiddleware, (req, res) =>
   ReviewController.deleteReview(req, res)
 );

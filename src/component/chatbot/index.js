@@ -3,30 +3,168 @@ import axios from "axios";
 import { FaRobot, FaPaperPlane } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { getAuthItem } from "utils/authStorage";
-import { getImageUrl } from "utils/image";
+import { getImageUrl, getProductImage } from "utils/image";
 import "./style.scss";
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
+const API = `${process.env.REACT_APP_API_URL || "/api"}/legacy`;
 const CHAT_SESSION_KEY_PREFIX = "wedding_live_chat_session";
 
 const isValidEmail = (value = "") => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+const isPhoneNumber = (value = "") => /^[0-9+\s.()-]{9,16}$/.test(value.trim());
+
+const normalizeText = (value = "") =>
+  String(value)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .trim();
+
+const formatMoney = (value) => Number(value || 0).toLocaleString("vi-VN") + " VNĐ";
+
+const SERVICE_KNOWLEDGE = {
+  overview:
+    "Ngọc Thiện Wedding nhận tổ chức dịch vụ cưới hỏi trọn gói tại Quảng Ngãi và khu vực lân cận: nấu tiệc, dàn nhạc, trang trí gia tiên, trang trí sân khấu, rạp cưới, bàn ghế, xe hoa và hỗ trợ lên kịch bản ngày cưới.",
+  address:
+    "Địa chỉ: Thôn An Tây, Xã Trà Giang, Quảng Ngãi. Hotline tư vấn: 0366 531 939.",
+  process:
+    "Quy trình đặt dịch vụ gồm 4 bước: 1. Trao đổi nhu cầu và ngày tổ chức. 2. Tư vấn gói phù hợp theo số bàn/khách. 3. Chốt báo giá và đặt cọc giữ lịch. 4. Chuẩn bị, thi công và bàn giao trong ngày tiệc.",
+  deposit:
+    "Thông thường khách đặt cọc khoảng 30% để giữ lịch. Phần còn lại thanh toán sau khi hoàn thành chương trình hoặc theo thỏa thuận trong hợp đồng.",
+  menu:
+    "Dịch vụ nấu tiệc có thể tư vấn theo ngân sách từng bàn. Mâm tiệc thường gồm khai vị, món chính, lẩu hoặc món nước, tráng miệng. Nếu bạn cho biết số bàn và mức giá mong muốn, tôi sẽ ước tính nhanh giúp bạn.",
+  decoration:
+    "Trang trí gia tiên và sân khấu có thể làm theo phong cách truyền thống, sang trọng đỏ vàng, pastel nhẹ nhàng hoặc hiện đại. Gói thường gồm phông nền, hoa, bàn gallery, cổng hoa, lối đi và ánh sáng tùy nhu cầu.",
+  music:
+    "Dàn nhạc có thể gồm âm thanh, ánh sáng, ca sĩ/MC, nhạc sống hoặc DJ tùy quy mô tiệc. Gói cơ bản phù hợp tiệc gia đình; gói nâng cao phù hợp sân khấu lớn hoặc ngoài trời.",
+  car:
+    "Xe hoa có thể trang trí theo tone cưới: đỏ, trắng, hồng pastel hoặc vàng champagne. Bạn nên đặt sớm để giữ xe đẹp và đồng bộ màu hoa với sân khấu/gia tiên.",
+  timing:
+    "Bạn nên liên hệ trước 2-4 tuần với tiệc nhỏ, và trước 1-2 tháng với tiệc lớn hoặc ngày đẹp để giữ lịch dàn nhạc, rạp và đội thi công.",
+};
+
+const QUICK_REPLIES = [
+  "Tư vấn gói cưới trọn gói",
+  "Báo giá 30 bàn",
+  "Trang trí gia tiên gồm gì?",
+  "Dàn nhạc và MC",
+  "Xe hoa cưới",
+  "Đặt lịch tư vấn",
+  "Liên hệ nhân viên",
+];
+
+const detectIntent = (message = "") => {
+  const text = normalizeText(message);
+
+  if (isValidEmail(message)) return "email";
+  if (isPhoneNumber(message) && /\d{9,11}/.test(message.replace(/\D/g, ""))) return "phone";
+  if (/(nhan vien|tu van vien|goi lai|lien he|hotline|support|gap nguoi)/.test(text)) return "human";
+  if (/(dia chi|o dau|cho nao|vi tri|quang ngai)/.test(text)) return "address";
+  if (/(dat coc|coc|thanh toan|chuyen khoan|tien mat|hop dong)/.test(text)) return "deposit";
+  if (/(quy trinh|dat lich|giu lich|bao lau|chuan bi|hen tu van|lich tu van)/.test(text)) return "process";
+  if (/(nau an|nau tiec|mam|thuc don|mon an|ban tiec|so ban|bao nhieu ban|khach)/.test(text)) return "menu";
+  if (/(gia|bao gia|chi phi|du toan|tinh tien|tong tien|ngan sach)/.test(text)) return "price";
+  if (/(trang tri|gia tien|san khau|cong hoa|rap|ban gallery|hoa tuoi)/.test(text)) return "decoration";
+  if (/(dan nhac|am thanh|anh sang|mc|ca si|dj|nhac song)/.test(text)) return "music";
+  if (/(xe hoa|xe cuoi|trang tri xe)/.test(text)) return "car";
+  if (/(san pham|dich vu|goi cuoi|goi dich vu|noi bat|combo)/.test(text)) return "products";
+  if (/(chao|hello|hi|xin chao)/.test(text)) return "greeting";
+
+  return "unknown";
+};
+
+const estimatePrice = (message = "") => {
+  const text = normalizeText(message);
+  const numbers = [...text.matchAll(/\d+/g)].map((match) => Number(match[0]));
+  const tableCount = numbers.find((n) => n >= 5 && n <= 300);
+  const guestCount = numbers.find((n) => n >= 50 && n <= 3000);
+
+  if (tableCount) {
+    const foodLow = tableCount * 2200000;
+    const foodHigh = tableCount * 3200000;
+    const decoration = 4000000;
+    const music = 5000000;
+    return `Với khoảng ${tableCount} bàn, chi phí tham khảo:
+
+- Nấu tiệc: ${formatMoney(foodLow)} - ${formatMoney(foodHigh)}
+- Trang trí gia tiên/sân khấu cơ bản: từ ${formatMoney(decoration)}
+- Dàn nhạc/âm thanh: từ ${formatMoney(music)}
+
+Tổng dự kiến: ${formatMoney(foodLow + decoration + music)} - ${formatMoney(foodHigh + decoration + music)}.
+Giá chính xác còn tùy thực đơn, địa điểm, ngày tổ chức và mức trang trí bạn chọn.`;
+  }
+
+  if (guestCount) {
+    const estimatedTables = Math.ceil(guestCount / 10);
+    return `Nếu khoảng ${guestCount} khách, mình ước tính khoảng ${estimatedTables} bàn. Chi phí sẽ phụ thuộc thực đơn từng bàn. Bạn có thể cho mình mức ngân sách mỗi bàn, ví dụ 2.500.000 hoặc 3.000.000 VNĐ/bàn, tôi sẽ tính sát hơn.`;
+  }
+
+  return "Bạn cho tôi biết số bàn hoặc số khách dự kiến nhé. Ví dụ: “báo giá 30 bàn” hoặc “tiệc 300 khách”. Tôi sẽ ước tính chi phí nấu tiệc, trang trí, dàn nhạc và xe hoa cho bạn.";
+};
+
+const buildAnswer = (intent, message) => {
+  switch (intent) {
+    case "greeting":
+      return `Xin chào, tôi là Wedding AI của Ngọc Thiện Wedding.
+
+Tôi có thể tư vấn nhanh về nấu tiệc, dàn nhạc, trang trí gia tiên, sân khấu, xe hoa, báo giá theo số bàn và quy trình đặt lịch. Bạn đang chuẩn bị tiệc khoảng bao nhiêu bàn?`;
+    case "address":
+      return SERVICE_KNOWLEDGE.address;
+    case "deposit":
+      return SERVICE_KNOWLEDGE.deposit;
+    case "process":
+      return SERVICE_KNOWLEDGE.process;
+    case "menu":
+      return `${SERVICE_KNOWLEDGE.menu}
+
+Gợi ý nhanh:
+- Tiệc gia đình ấm cúng: thực đơn vừa phải, ưu tiên món dễ ăn.
+- Tiệc cưới sang trọng: món khai vị, hải sản, lẩu, tráng miệng.
+- Tiệc ngoài trời: ưu tiên món dễ phục vụ, giữ nhiệt tốt.`;
+    case "price":
+      return estimatePrice(message);
+    case "decoration":
+      return `${SERVICE_KNOWLEDGE.decoration}
+
+Nếu bạn gửi tone màu yêu thích, số lượng bàn và địa điểm tổ chức, tôi có thể gợi ý concept phù hợp hơn.`;
+    case "music":
+      return `${SERVICE_KNOWLEDGE.music}
+
+Để chọn gói phù hợp, bạn cho tôi biết tiệc trong nhà hay ngoài trời, số khách và có cần MC/ca sĩ không nhé.`;
+    case "car":
+      return `${SERVICE_KNOWLEDGE.car}
+
+Bạn muốn xe hoa tone đỏ truyền thống, trắng tinh tế hay pastel nhẹ nhàng?`;
+    case "products":
+      return SERVICE_KNOWLEDGE.overview;
+    default:
+      return `Tôi có thể hỗ trợ các câu hỏi về:
+
+- Báo giá theo số bàn/số khách
+- Nấu tiệc và thực đơn
+- Trang trí gia tiên, sân khấu, rạp cưới
+- Dàn nhạc, MC, âm thanh ánh sáng
+- Xe hoa và lịch đặt dịch vụ
+- Đặt cọc, thanh toán, quy trình hợp đồng
+
+Bạn có thể hỏi ví dụ: “tiệc 30 bàn giá bao nhiêu?”, “trang trí gia tiên gồm gì?”, hoặc “cần đặt trước bao lâu?”.`;
+  }
+};
 
 const ChatBot = () => {
   const navigate = useNavigate();
-
-  const [open,setOpen] = useState(false);
-  const [input,setInput] = useState("");
-  const [typing,setTyping] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [typing, setTyping] = useState(false);
   const [humanMode, setHumanMode] = useState(false);
   const [chatSession, setChatSession] = useState("");
-
   const chatRef = useRef(null);
 
-  const [messages,setMessages] = useState([
+  const [messages, setMessages] = useState([
     {
-      from:"bot",
-      text:"👋 Xin chào! Tôi là Wedding AI. Hãy cho tôi biết điều bạn muốn tìm! 💕"
-    }
+      from: "bot",
+      text: "Xin chào! Tôi là Wedding AI của Ngọc Thiện Wedding. Bạn cần tư vấn nấu tiệc, trang trí, dàn nhạc, xe hoa hay báo giá theo số bàn?",
+    },
   ]);
 
   const currentUserId = String(getAuthItem("user_id") || "").trim();
@@ -44,9 +182,7 @@ const ChatBot = () => {
   const storageSessionKey = `${CHAT_SESSION_KEY_PREFIX}_${accountScopeKey}`;
 
   const getOrCreateChatSession = useCallback(() => {
-    if (currentUserId) {
-      return `live_user_${currentUserId}`;
-    }
+    if (currentUserId) return `live_user_${currentUserId}`;
 
     const existed = window.localStorage.getItem(storageSessionKey);
     if (existed) return existed;
@@ -56,7 +192,7 @@ const ChatBot = () => {
     return nextSession;
   }, [currentUserId, storageSessionKey]);
 
-  const appendSystemMessage = (text) => {
+  const appendBotMessage = (text) => {
     setMessages((prev) => [...prev, { from: "bot", text }]);
   };
 
@@ -68,7 +204,6 @@ const ChatBot = () => {
 
   const loadLiveMessages = useCallback(async (forceSession) => {
     const activeSession = forceSession || chatSession || getOrCreateChatSession();
-
     if (!activeSession) return;
 
     try {
@@ -76,7 +211,17 @@ const ChatBot = () => {
       if (!res.data?.success) return;
 
       const rows = Array.isArray(res.data.data) ? res.data.data : [];
-      const nextMessages = rows.map((item) => {
+      if (rows.length === 0) {
+        setMessages([
+          {
+            from: "bot",
+            text: "Bạn đang ở chế độ liên hệ nhân viên. Hãy để lại câu hỏi, nhân viên sẽ phản hồi trong khung chat này.",
+          },
+        ]);
+        return;
+      }
+
+      setMessages(rows.map((item) => {
         let payloadData = null;
         if (item.payload_json) {
           try {
@@ -92,26 +237,15 @@ const ChatBot = () => {
           text: item.message || "",
           products:
             item.message_type === "product" && payloadData
-              ? [
-                  {
-                    id: payloadData.id || item.id,
-                    name: payloadData.name || "Dịch vụ",
-                    price: Number(payloadData.price || 0),
-                    cover: payloadData.cover || "",
-                  },
-                ]
+              ? [{
+                  id: payloadData.id || item.id,
+                  name: payloadData.name || "Dịch vụ",
+                  price: Number(payloadData.price || 0),
+                  cover: getProductImage(payloadData),
+                }]
               : undefined,
         };
-      });
-
-      if (nextMessages.length === 0) {
-        setMessages([
-          { from: "bot", text: "👩‍💼 Bạn đang ở chế độ liên hệ nhân viên. Hãy để lại tin nhắn, nhân viên sẽ phản hồi sớm nhất." },
-        ]);
-        return;
-      }
-
-      setMessages(nextMessages);
+      }));
     } catch (error) {
       console.error("Load live chat messages error:", error);
     }
@@ -153,18 +287,29 @@ const ChatBot = () => {
       }
     } catch (error) {
       console.error("Send live chat error:", error);
-      appendSystemMessage("⚠️ Không thể gửi tin nhắn cho nhân viên, vui lòng thử lại.");
+      appendBotMessage("Không thể gửi tin nhắn cho nhân viên lúc này. Bạn vui lòng thử lại hoặc gọi hotline 0366 531 939.");
     }
   };
 
-  const suggestions = [
-    "🌟 Sản phẩm nổi bật",
-    "💍 Tiệc sang trọng",
-    "🌳 Tiệc ngoài trời",
-    "💰 Tính giá tiệc",
-    "📅 Đặt lịch tư vấn",
-    "👩‍💼 Liên hệ nhân viên"
-  ];
+  const saveBotMessage = async (message, extra = {}) => {
+    const storedUsername = getAuthItem("username") || "";
+    const storedEmail = getAuthItem("email") || "";
+    const customerEmail = isValidEmail(storedEmail)
+      ? storedEmail.trim()
+      : (isValidEmail(storedUsername) ? storedUsername.trim() : "");
+    const customerName = (storedUsername || "Khách").trim() || "Khách";
+
+    try {
+      await axios.post(`${API}?action=saveChatbotMessage`, {
+        name: customerName,
+        email: customerEmail,
+        message,
+        ...extra,
+      });
+    } catch {
+      // Chat should continue even if logging fails.
+    }
+  };
 
   useEffect(() => {
     const session = getOrCreateChatSession();
@@ -184,177 +329,128 @@ const ChatBot = () => {
     return () => clearInterval(timer);
   }, [open, humanMode, chatSession, getOrCreateChatSession, loadLiveMessages]);
 
-  // scroll xuống cuối chat
-  useEffect(()=>{
-    if(chatRef.current){
+  useEffect(() => {
+    if (chatRef.current) {
       chatRef.current.scrollTop = chatRef.current.scrollHeight;
     }
-  },[messages,typing]);
+  }, [messages, typing]);
 
-  // =========================
-  // GỬI TIN NHẮN
-  // =========================
-
-  const sendMessage = async (msgText = input) => {
-
-    if(!msgText.trim()) return;
-
-    if (humanMode) {
-      await sendLiveMessage(msgText);
-      return;
-    }
-
-    const userMsg = {from:"user",text:msgText};
-    setMessages(prev=>[...prev,userMsg]);
-
-    setTyping(true);
-
-    const text = msgText.toLowerCase();
-    const storedUsername = getAuthItem("username") || "";
-    const storedEmail = getAuthItem("email") || "";
-    const customerEmail = isValidEmail(storedEmail)
-      ? storedEmail.trim()
-      : (isValidEmail(storedUsername) ? storedUsername.trim() : "");
-    const customerName = (storedUsername || "Khách").trim() || "Khách";
-
-    // lưu chat
-    try{
-      await axios.post(`${API}?action=saveChatbotMessage`,{
-        name: customerName,
-        email: customerEmail,
-        message:msgText
-      });
-    }catch{}
-
-    // Quick NLU for email/phone/contact
-    const analyzeIntent = (s='') => {
-      const t = String(s||'').toLowerCase();
-      if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) return { intent: 'email' };
-      if(/^[0-9]{9,11}$/.test(t)) return { intent: 'phone' };
-      if(/\b(liên hệ|nhân viên|hỗ trợ|support|liênlac|contact)\b/.test(t)) return { intent: 'contact' };
-      return { intent: 'unknown' };
-    };
-
-    const quick = analyzeIntent(msgText.trim());
-    if(quick.intent === 'email'){
-      try{ await axios.post(`${API}?action=saveChatbotMessage`,{ name: customerName, email: msgText.trim(), message: 'Khach de lai email lien he' }); }catch{}
-      reply(`✅ **Đã nhận email của bạn!**\n\n📧 Email: ${msgText.trim()}\n\n📞 Chúng tôi sẽ liên hệ sớm để tư vấn chi tiết.`);
-      return;
-    }
-
-    if(quick.intent === 'phone'){
-      try{ await axios.post(`${API}?action=saveChatbotMessage`,{ name: customerName, email: customerEmail, phone: msgText.trim(), message: 'Khach de lai so dien thoai' }); }catch{}
-      reply(`✅ **Cảm ơn bạn đã tin tưởng chúng tôi!**\n\n📱 Số điện thoại: ${msgText}\n\n📞 Chúng tôi sẽ **gọi tư vấn ngay**!\n⏱️ Vui lòng chờ trong vòng 30 phút - 2 giờ\n\n💝 Đặc biệt: Khách hàng liên hệ qua chat sẽ được **ưu đãi 5-10%**!`);
-      return;
-    }
-
-    if(quick.intent === 'contact'){
-      setHumanMode(true);
-      const session = chatSession || getOrCreateChatSession();
-      setChatSession(session);
-      appendSystemMessage("👩‍💼 Đã chuyển sang chế độ liên hệ nhân viên. Bạn nhắn nội dung, nhân viên sẽ phản hồi ngay trong khung chat này.");
-      await sendLiveMessage(msgText);
-      return;
-    }
-
-    // Intent mapping (more professional responses)
-    const detect = (s='') => {
-      const t = String(s||'').toLowerCase();
-      if(/\b(sản phẩm|nổi bật|product)\b/.test(t)) return 'products';
-      if(/\b(sang trọng|luxury|sang)\b/.test(t)) return 'luxury';
-      if(/\b(ngo(?:[àa]i trời|ai troi|ngoài trời)|outdoor)\b/.test(t)) return 'outdoor';
-      if(/\b(tính giá|giá|bao nhiêu|báo giá)\b/.test(t)) return 'price';
-      if(/\b(đặt lịch|tư vấn|booking|consultation)\b/.test(t)) return 'booking';
-      return 'unknown';
-    };
-
-    const intent = detect(msgText);
-
-    switch(intent){
-      case 'products':
-        try{
-          const res = await axios.get(`${API}?action=getProducts`);
-          if(res.data.success){
-            const products = res.data.data.slice(0,3);
-            setTimeout(()=>{ setMessages(prev=>[...prev,{ from: 'bot', text: '✨ Dưới đây là một số dịch vụ nổi bật của chúng tôi:', products }]); setTyping(false); },700);
-            setInput('');
-            return;
-          }
-        }catch{}
-        reply('Xin lỗi, hiện không thể tải danh sách sản phẩm. Vui lòng thử lại sau.');
-        return;
-
-      case 'luxury':
-        reply(`💎 Gói Tiệc Cưới Sang Trọng — Mô tả chuyên nghiệp:\n\n• Trang trí cao cấp, hoa nhập khẩu\n• DJ & MC chuyên nghiệp\n• Chụp ảnh quay phim 4K\n• Catering phong cách 5 sao\n\n💰 Giá tham khảo: 45.000.000 - 60.000.000 VNĐ\n\nĐể nhận tư vấn chi tiết, bạn có muốn để lại số điện thoại hoặc yêu cầu liên hệ không?`);
-        return;
-
-      case 'outdoor':
-        reply(`🌳 Gói Tiệc Ngoài Trời — Phù hợp cho các cặp ưa thiên nhiên:\n\n• Không gian mở, trang trí nhẹ nhàng\n• Hệ thống đèn, sân khấu di động\n• Catering lưu động chuyên nghiệp\n\n📌 Giá tham khảo: 30.000.000 - 45.000.000 VNĐ\n\nBạn muốn tôi gửi portfolio các sự kiện ngoài trời gần nhất?`);
-        return;
-
-      case 'price':{
-        const guestCount = msgText.match(/\d{2,4}/)?.[0] || null;
-        if(!guestCount){ reply('Bạn dự kiến bao nhiêu khách tham dự? Vui lòng nhập số người (ví dụ: 120).'); return; }
-        const pricePerGuest = 150000 + Math.random()*100000;
-        const totalPrice = guestCount * pricePerGuest;
-        reply(`💰 Dự toán chi phí:\n\n• Số khách: ~${guestCount}\n• Giá/khách: ${Math.round(pricePerGuest).toLocaleString()} VNĐ\n\n**Tổng: ${Math.round(totalPrice).toLocaleString()} VNĐ**\n\nLưu ý: Đây là ước tính nhanh. Để có báo giá chính xác, vui lòng đặt lịch tư vấn.`);
-        return;
-      }
-
-      case 'booking':
-        reply('📅 Để đặt lịch tư vấn, vui lòng cung cấp số điện thoại hoặc chọn "Liên hệ nhân viên" để chúng tôi gọi lại bạn.');
-        return;
-
-      default:
-        reply("💭 Tôi không hiểu rõ. Bạn muốn hỏi gì? 😊\n\n🔍 Tôi có thể giúp:\n✨ Sản phẩm\n💍 Tiệc sang\n🌳 Tiệc ngoài\n💰 Tính giá\n📅 Đặt lịch");
-        return;
-    }
-  };
-
-  // =========================
-  // BOT TRẢ LỜI
-  // =========================
-
-  const reply = (text)=>{
-
-    setTimeout(()=>{
-
-      setMessages(prev=>[
-        ...prev,
-        {from:"bot",text}
-      ]);
-
+  const reply = (text) => {
+    setTimeout(() => {
+      appendBotMessage(text);
       setTyping(false);
-
-    },900);
-
+    }, 650);
     setInput("");
   };
 
-  // enter gửi tin nhắn
-  const handleKey = (e)=>{
-    if(e.key==="Enter"){
+  const showProducts = async () => {
+    try {
+      const res = await axios.get(`${API}?action=getProducts`);
+      if (res.data?.success) {
+        const products = (res.data.data || []).slice(0, 3);
+        setTimeout(() => {
+          setMessages((prev) => [
+            ...prev,
+            {
+              from: "bot",
+              text: "Một số dịch vụ nổi bật bạn có thể tham khảo:",
+              products,
+            },
+          ]);
+          setTyping(false);
+        }, 650);
+        return true;
+      }
+    } catch {
+      // Fall back to text answer.
+    }
+
+    return false;
+  };
+
+  const switchToHuman = async (messageToSend = "") => {
+    setHumanMode(true);
+    const session = chatSession || getOrCreateChatSession();
+    setChatSession(session);
+    appendBotMessage("Đã chuyển sang chế độ liên hệ nhân viên. Bạn cứ nhắn nhu cầu, nhân viên Ngọc Thiện Wedding sẽ phản hồi tại đây.");
+    if (messageToSend) {
+      await sendLiveMessage(messageToSend);
+    }
+  };
+
+  const sendMessage = async (msgText = input) => {
+    const cleanText = String(msgText || "").trim();
+    if (!cleanText) return;
+
+    if (humanMode) {
+      await sendLiveMessage(cleanText);
+      return;
+    }
+
+    setMessages((prev) => [...prev, { from: "user", text: cleanText }]);
+    setTyping(true);
+    setInput("");
+    await saveBotMessage(cleanText);
+
+    const intent = detectIntent(cleanText);
+
+    if (intent === "email") {
+      await saveBotMessage("Khách để lại email", { email: cleanText });
+      reply(`Đã nhận email của bạn: ${cleanText}.
+
+Ngọc Thiện Wedding sẽ liên hệ để tư vấn chi tiết về dịch vụ, ngày tiệc và báo giá phù hợp.`);
+      return;
+    }
+
+    if (intent === "phone") {
+      await saveBotMessage("Khách để lại số điện thoại", { phone: cleanText });
+      reply(`Cảm ơn bạn. Tôi đã ghi nhận số điện thoại: ${cleanText}.
+
+Nhân viên sẽ liên hệ tư vấn về dịch vụ cưới hỏi, báo giá và lịch tổ chức. Hotline cần gọi nhanh: 0366 531 939.`);
+      return;
+    }
+
+    if (intent === "human") {
+      setTyping(false);
+      await switchToHuman(cleanText);
+      return;
+    }
+
+    if (intent === "products") {
+      const loaded = await showProducts();
+      if (loaded) return;
+    }
+
+    reply(buildAnswer(intent, cleanText));
+  };
+
+  const handleKey = (e) => {
+    if (e.key === "Enter") {
       sendMessage();
     }
   };
 
-  return(
-
+  return (
     <div className="chatbot">
-
-      <div
+      <button
+        type="button"
         className="chatbot-toggle"
-        onClick={()=>setOpen(!open)}
+        onClick={() => setOpen(!open)}
+        aria-label="Mở Wedding AI"
       >
-        💬
-      </div>
+        <FaRobot />
+      </button>
 
       {open && (
-
         <div className="chatbot-box">
-
           <div className="chatbot-header">
-            <FaRobot/> Wedding AI
+            <div className="chat-title">
+              <FaRobot />
+              <div>
+                <strong>Wedding AI</strong>
+                <span>Ngọc Thiện Wedding</span>
+              </div>
+            </div>
             <button
               type="button"
               className={`chat-mode-btn ${humanMode ? "active" : ""}`}
@@ -366,124 +462,90 @@ const ChatBot = () => {
                   const session = chatSession || getOrCreateChatSession();
                   setChatSession(session);
                   await loadLiveMessages(session);
-                  if (!messages.length) {
-                    appendSystemMessage("👩‍💼 Bạn đang ở chế độ liên hệ nhân viên.");
-                  }
                 } else {
                   setMessages([
                     {
                       from: "bot",
-                      text: "👋 Xin chào! Tôi là Wedding AI. Hãy cho tôi biết điều bạn muốn tìm! 💕"
-                    }
+                      text: "Tôi đã quay lại chế độ Wedding AI. Bạn muốn hỏi về báo giá, thực đơn, trang trí, dàn nhạc hay xe hoa?",
+                    },
                   ]);
                 }
               }}
             >
-              {humanMode ? "Đang liên hệ nhân viên" : "Liên hệ nhân viên"}
+              {humanMode ? "AI tự động" : "Nhân viên"}
             </button>
           </div>
 
-          {/* CHAT */}
-
           <div className="chatbot-messages" ref={chatRef}>
+            {messages.map((message, index) => (
+              <div key={message.id || index} className={message.from === "bot" ? "bot" : message.from === "admin" ? "admin" : "user"}>
+                <div className="text">{message.text}</div>
 
-            {messages.map((m,i)=>(
-
-              <div key={m.id || i} className={m.from === "bot" ? "bot" : m.from === "admin" ? "admin" : "user"}>
-
-                <div className="text">{m.text}</div>
-
-                {/* CARD SẢN PHẨM */}
-
-                {m.products && (
-
+                {message.products && (
                   <div className="bubble-product-list">
-
-                    {m.products.map(p=>(
-
+                    {message.products.map((product) => (
                       <div
-                        key={p.id}
+                        key={product.id}
                         className="bubble-product-card"
                         role="button"
                         tabIndex={0}
-                        onClick={() => goToProductDetail(p.id)}
+                        onClick={() => goToProductDetail(product.id)}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" || e.key === " ") {
                             e.preventDefault();
-                            goToProductDetail(p.id);
+                            goToProductDetail(product.id);
                           }
                         }}
                       >
-
                         <img
-                          src={getImageUrl(p.cover)}
-                          alt={p.name}
-                          onError={(e)=>{
-                            e.target.src="https://via.placeholder.com/150";
+                          src={getImageUrl(getProductImage(product))}
+                          alt={product.name}
+                          onError={(e) => {
+                            e.target.src = "https://via.placeholder.com/150";
                           }}
                         />
-
                         <div className="bubble-product-meta">
-                          <strong>{p.name}</strong>
-                          <span>{Number(p.price).toLocaleString()} VND</span>
+                          <strong>{product.name}</strong>
+                          <span>{formatMoney(product.price)}</span>
                         </div>
-
                       </div>
-
                     ))}
-
                   </div>
-
                 )}
-
               </div>
-
             ))}
 
             {typing && !humanMode && (
               <div className="bot typing">
-                Wedding AI đang trả lời...
+                Wedding AI đang soạn câu trả lời...
               </div>
             )}
-
           </div>
 
-          {/* SUGGESTIONS */}
-
-          <div className="chatbot-suggestions">
-
-            {!humanMode && suggestions.map((s,i)=>(
-              <button
-                key={i}
-                onClick={()=>sendMessage(s)}
-              >
-                {s}
-              </button>
-            ))}
-
-          </div>
-
-          {/* INPUT */}
+          {!humanMode && (
+            <div className="chatbot-suggestions">
+              {QUICK_REPLIES.map((suggestion) => (
+                <button key={suggestion} onClick={() => sendMessage(suggestion)}>
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
 
           <div className="chatbot-input">
-
             <input
               value={input}
-              onChange={(e)=>setInput(e.target.value)}
+              onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKey}
-              placeholder={humanMode ? "Nhắn cho nhân viên..." : "Nhập tin nhắn..."}
+              placeholder={humanMode ? "Nhắn cho nhân viên..." : "Hỏi về dịch vụ cưới hỏi..."}
             />
 
-            <button onClick={()=>sendMessage()}>
-              <FaPaperPlane/>
+            <button type="button" onClick={() => sendMessage()} aria-label="Gửi tin nhắn">
+              <FaPaperPlane />
             </button>
-
           </div>
-
         </div>
-
       )}
-
     </div>
   );
 };

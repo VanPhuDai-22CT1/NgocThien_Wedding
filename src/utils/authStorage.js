@@ -36,6 +36,19 @@ export const setAuthSession = (auth = {}) => {
   });
 };
 
+export const getAuthSession = () => {
+  if (!hasWindow()) return {};
+
+  return AUTH_STORAGE_KEYS.reduce((session, key) => {
+    const value = getAuthItem(key);
+    if (value !== null) {
+      session[key] = value;
+    }
+
+    return session;
+  }, {});
+};
+
 export const clearAuthSession = () => {
   if (!hasWindow()) return;
 
@@ -43,6 +56,15 @@ export const clearAuthSession = () => {
     window.sessionStorage.removeItem(key);
     window.localStorage.removeItem(key);
   });
+
+  window.name = "";
+};
+
+export const logoutAuthSession = (redirectTo = "/") => {
+  clearAuthSession();
+
+  if (!hasWindow()) return;
+  window.location.replace(redirectTo);
 };
 
 export const hydrateAuthSessionFromLegacy = () => {
@@ -61,4 +83,33 @@ export const hydrateAuthSessionFromLegacy = () => {
       window.sessionStorage.setItem(key, normalized);
     }
   });
+};
+
+export const hydrateAuthSessionFromWindowName = () => {
+  if (!hasWindow()) return;
+
+  const rawValue = String(window.name || '').trim();
+  if (!rawValue) return;
+
+  let parsedValue = null;
+  try {
+    parsedValue = JSON.parse(rawValue);
+  } catch (_error) {
+    return;
+  }
+
+  if (!parsedValue || typeof parsedValue !== 'object') return;
+
+  const authPayload = {};
+  AUTH_STORAGE_KEYS.forEach((key) => {
+    const normalized = normalizeAuthValue(parsedValue[key]);
+    if (normalized !== null) {
+      authPayload[key] = normalized;
+    }
+  });
+
+  if (Object.keys(authPayload).length === 0) return;
+
+  setAuthSession(authPayload);
+  window.name = '';
 };

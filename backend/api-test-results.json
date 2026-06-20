@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-05-12T05:27:27.038Z",
+  "timestamp": "2026-06-07T02:47:40.834Z",
   "tests": [
     {
       "name": "GET Products",
@@ -11,7 +11,7 @@
         "success": true,
         "data": []
       },
-      "timestamp": "2026-05-12T05:27:27.067Z"
+      "timestamp": "2026-06-07T02:47:40.888Z"
     },
     {
       "name": "GET Consultations",
@@ -23,36 +23,64 @@
         "success": true,
         "data": [
           {
-            "id": 2,
+            "id": 4,
             "user_id": null,
             "name": "Test User",
             "email": "test@example.com",
             "phone": "0123456789",
+            "service": "wedding",
+            "event_date": null,
+            "note": "",
+            "status": "pending",
+            "is_read": false,
+            "created_at": "2026-06-07T02:08:04.000Z",
+            "updated_at": "2026-06-07T02:08:04.000Z"
+          },
+          {
+            "id": 3,
+            "user_id": null,
+            "name": "John Doe",
+            "email": "john@test.com",
+            "phone": "0987654321",
             "service": "",
             "event_date": null,
             "note": "",
             "status": "pending",
             "is_read": false,
-            "created_at": "2026-05-12T05:22:45.000Z",
-            "updated_at": "2026-05-12T05:22:45.000Z"
+            "created_at": "2026-05-13T08:54:04.000Z",
+            "updated_at": "2026-05-13T08:54:04.000Z"
           },
           {
             "id": 1,
             "user_id": null,
-            "name": "Test User",
-            "email": "test@example.com",
+            "name": "Nguyen Van A",
+            "email": "nva@example.com",
             "phone": "0123456789",
-            "service": "",
-            "event_date": null,
-            "note": "",
+            "service": "Trang tri tiec cuoi",
+            "event_date": "2026-06-20T03:00:00.000Z",
+            "note": "Muon tu van chi phi",
             "status": "pending",
             "is_read": false,
-            "created_at": "2026-05-12T05:21:38.000Z",
-            "updated_at": "2026-05-12T05:21:38.000Z"
+            "created_at": "2026-05-13T08:46:53.000Z",
+            "updated_at": "2026-05-13T08:46:53.000Z"
+          },
+          {
+            "id": 2,
+            "user_id": null,
+            "name": "Tran Thi B",
+            "email": "ttb@example.com",
+            "phone": "0987654321",
+            "service": "Chup anh cuoi",
+            "event_date": "2026-07-05T07:00:00.000Z",
+            "note": "Can thong tin goi chup",
+            "status": "pending",
+            "is_read": false,
+            "created_at": "2026-05-13T08:46:53.000Z",
+            "updated_at": "2026-05-13T08:46:53.000Z"
           }
         ]
       },
-      "timestamp": "2026-05-12T05:27:27.071Z"
+      "timestamp": "2026-06-07T02:47:40.896Z"
     },
     {
       "name": "POST Add Consultation",
@@ -63,21 +91,21 @@
       "body": {
         "success": true,
         "data": {
-          "created_at": "2026-05-12T05:27:27.073Z",
-          "updated_at": "2026-05-12T05:27:27.073Z",
-          "id": 3,
+          "created_at": "2026-06-07T02:47:40.903Z",
+          "updated_at": "2026-06-07T02:47:40.903Z",
+          "id": 5,
           "user_id": null,
           "name": "Test User",
           "email": "test@example.com",
           "phone": "0123456789",
-          "service": "",
+          "service": "wedding",
           "event_date": null,
           "note": "",
           "status": "pending",
           "is_read": false
         }
       },
-      "timestamp": "2026-05-12T05:27:27.078Z"
+      "timestamp": "2026-06-07T02:47:40.912Z"
     },
     {
       "name": "GET Live Chat Sessions",
@@ -89,7 +117,7 @@
         "success": true,
         "data": []
       },
-      "timestamp": "2026-05-12T05:27:27.080Z"
+      "timestamp": "2026-06-07T02:47:40.919Z"
     },
     {
       "name": "GET Orders",
@@ -101,7 +129,7 @@
         "success": true,
         "orders": []
       },
-      "timestamp": "2026-05-12T05:27:27.085Z"
+      "timestamp": "2026-06-07T02:47:40.928Z"
     },
     {
       "name": "GET Users",
@@ -109,8 +137,108 @@
       "url": "http://localhost:4000/api/legacy?action=getUsers",
       "status": 200,
       "passed": true,
-      "body": [],
-      "timestamp": "2026-05-12T05:27:27.087Z"
+      "body": {
+        "success": true,
+        "data": [
+          {
+            "id": 8,
+            "username": "otpreset1779853643779",
+            "email": "otp-reset-1779853643779@example.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-27T03:47:23.000Z",
+            "updated_at": "2026-05-27T03:57:45.000Z"
+          },
+          {
+            "id": 7,
+            "username": "x",
+            "email": "x@example.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-27T02:47:51.000Z",
+            "updated_at": "2026-05-27T02:47:51.000Z"
+          },
+          {
+            "id": 6,
+            "username": "testuser",
+            "email": "test@example.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-27T02:41:22.000Z",
+            "updated_at": "2026-05-27T02:41:22.000Z"
+          },
+          {
+            "id": 5,
+            "username": "Vanphudai24",
+            "email": "Vanphudai24@gmail.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-27T02:15:34.000Z",
+            "updated_at": "2026-05-27T02:15:34.000Z"
+          },
+          {
+            "id": 4,
+            "username": "Vanphudai",
+            "email": "Vanphudai2004@gmail.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-27T02:02:52.000Z",
+            "updated_at": "2026-05-27T02:02:52.000Z"
+          },
+          {
+            "id": 3,
+            "username": "Vanphudai24122004@gmail.com",
+            "email": "Vanphudai24122004@gmail.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-13T09:28:04.000Z",
+            "updated_at": "2026-05-13T09:28:04.000Z"
+          },
+          {
+            "id": 2,
+            "username": "Đại Văn ",
+            "email": "dai_2251220039@dau.edu.vn",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "admin",
+            "is_active": true,
+            "created_at": "2026-05-13T09:02:36.000Z",
+            "updated_at": "2026-05-13T09:03:50.000Z"
+          },
+          {
+            "id": 1,
+            "username": "testuser1",
+            "email": "test1@test.com",
+            "full_name": "",
+            "phone": null,
+            "address": null,
+            "role": "user",
+            "is_active": true,
+            "created_at": "2026-05-13T08:53:38.000Z",
+            "updated_at": "2026-05-13T08:53:38.000Z"
+          }
+        ]
+      },
+      "timestamp": "2026-06-07T02:47:40.935Z"
     },
     {
       "name": "GET Dashboard Stats",
@@ -120,7 +248,7 @@
       "passed": true,
       "body": {
         "success": true,
-        "total_users": 0,
+        "total_users": 8,
         "total_products": 0,
         "total_orders": 0,
         "total_revenue": 0,
@@ -130,7 +258,7 @@
         "months": [],
         "monthly_revenue": []
       },
-      "timestamp": "2026-05-12T05:27:27.096Z"
+      "timestamp": "2026-06-07T02:47:40.948Z"
     },
     {
       "name": "GET Activity Logs",
@@ -142,7 +270,7 @@
         "success": true,
         "data": []
       },
-      "timestamp": "2026-05-12T05:27:27.099Z"
+      "timestamp": "2026-06-07T02:47:40.955Z"
     },
     {
       "name": "GET Cart",
@@ -155,7 +283,7 @@
         "data": [],
         "cart": []
       },
-      "timestamp": "2026-05-12T05:27:27.102Z"
+      "timestamp": "2026-06-07T02:47:40.964Z"
     },
     {
       "name": "GET Homepage Config",
@@ -190,7 +318,7 @@
           }
         }
       },
-      "timestamp": "2026-05-12T05:27:27.105Z"
+      "timestamp": "2026-06-07T02:47:40.970Z"
     }
   ],
   "summary": {

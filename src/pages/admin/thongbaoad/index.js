@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
   import "./style.scss";
   import { NavLink, useLocation, useNavigate } from "react-router-dom";
   import { createPortal } from "react-dom";
+  import { apiClient, buildAuthHeaders } from "utils/apiClient";
   import {
     FaBell,
     FaShoppingCart,
@@ -16,7 +17,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
     FaRegCalendarAlt,
   } from "react-icons/fa";
 
-  const API = "http://localhost:4000/api/legacy";
+  const API = "/api/legacy";
 
   const Notification = () => {
     const [consultations, setConsultations] = useState([]);
@@ -69,8 +70,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 
     const fetchConsultations = async () => {
       try {
-        const res = await fetch(`${API}?action=getConsultations`);
-        const data = await res.json();
+        const res = await apiClient.get(`/legacy`, { params: { action: "getConsultations" }, headers: buildAuthHeaders() });
+          const data = res.data || {};
         if (!data.success) return;
 
         const newData = (data.data || [])
@@ -106,12 +107,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
         formData.append("id", id);
         formData.append("status", status);
 
-        const res = await fetch(`${API}?action=updateConsultationStatus`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
+        const res = await apiClient.post(`/legacy`, { action: "updateConsultationStatus", id, status }, { headers: buildAuthHeaders() });
+        const data = res.data || {};
         if (!data.success) {
           alert(data.message || "Cập nhật thất bại");
           return;
@@ -134,12 +131,8 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
         const formData = new FormData();
         formData.append("id", id);
 
-        const res = await fetch(`${API}?action=markConsultationAsRead`, {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await res.json();
+        const res = await apiClient.post(`/legacy`, { action: "markConsultationAsRead", id }, { headers: buildAuthHeaders() });
+        const data = res.data || {};
         if (data.success && data.consultation) {
           setConsultations((prev) => prev.map((item) => (item.id === id ? data.consultation : item)));
           setSelectedConsultation((prev) => (prev && prev.id === id ? data.consultation : prev));
@@ -221,8 +214,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
             <li><NavLink to="/notification" end><FaBell /> Lịch tư vấn</NavLink></li>
             <li><NavLink to="/lichlamviec"><FaRegCalendarAlt /> Lịch làm việc</NavLink></li>
             <li><NavLink to="/qlhoatdong"><FaHistory /> Lịch sử hoạt động</NavLink></li>
-            <li><NavLink to="/thong-ke"><FaChartPie /> Thống kê</NavLink></li>
-            <li><NavLink to="/admin/ho-so-nguoi-code"><FaUsers /> Hồ sơ người code</NavLink></li>
           </ul>
         </aside>
 

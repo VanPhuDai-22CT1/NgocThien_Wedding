@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
+import { FaCalendarAlt, FaClipboardList, FaMapMarkerAlt, FaPhoneAlt, FaRegHeart, FaTimes } from "react-icons/fa";
 import { getAuthItem } from "utils/authStorage";
 import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import "./style.scss";
@@ -15,7 +16,7 @@ const formatCurrency = (value) =>
   Number(value || 0).toLocaleString("vi-VN") + " VNĐ";
 
 const formatDate = (date) =>
-  date ? new Date(date).toLocaleString("vi-VN") : "N/A";
+  date ? new Date(date).toLocaleString("vi-VN") : "Chưa cập nhật";
 
 const normalizeStatus = (status) => {
   const value = String(status || "").toLowerCase();
@@ -28,16 +29,50 @@ const normalizeStatus = (status) => {
   return status || "Đang xử lý";
 };
 
-// Parse dịch vụ từ note khi đơn không có order_details (đơn từ tư vấn)
 const parseServicesFromNote = (note) => {
   if (!note) return [];
-  // Ưu tiên "Danh sách gói đã chọn: ..."
-  const match1 = note.match(/Danh sách gói đã chọn:\s*([^\n]+)/);
-  if (match1) return match1[1].split(",").map((s) => s.trim()).filter(Boolean);
-  // Fallback: "Dịch vụ: ..."
-  const match2 = note.match(/Dịch vụ:\s*([^|]+)/);
-  if (match2) return match2[1].split(",").map((s) => s.trim()).filter(Boolean);
+
+  const selectedMatch = note.match(/Danh sách gói đã chọn:\s*([^\n]+)/);
+  if (selectedMatch) {
+    return selectedMatch[1].split(",").map((service) => service.trim()).filter(Boolean);
+  }
+
+  const serviceMatch = note.match(/Dịch vụ:\s*([^|]+)/);
+  if (serviceMatch) {
+    return serviceMatch[1].split(",").map((service) => service.trim()).filter(Boolean);
+  }
+
   return [];
+};
+
+const getStatusClass = (status) => {
+  const normalized = String(status || "").trim().toLowerCase();
+
+  if (normalized.includes("bàn giao") || normalized.includes("đã giao") || normalized === "delivered") {
+    return "status success";
+  }
+
+  if (normalized.includes("đang giao") || normalized === "shipping") {
+    return "status delivering";
+  }
+
+  if (normalized.includes("xác nhận")) {
+    return "status confirmed";
+  }
+
+  if (normalized.includes("hủy") || normalized === "cancelled") {
+    return "status cancel";
+  }
+
+  return "status processing";
+};
+
+const getPrimaryServices = (order) => {
+  if (order.details && order.details.length > 0) {
+    return order.details.map((item) => item.product_name);
+  }
+
+  return parseServicesFromNote(order.note);
 };
 
 const Receipt = () => {
@@ -52,7 +87,7 @@ const Receipt = () => {
 
   const fetchOrders = useCallback(async () => {
     if (!userId) {
-      setMessage("Vui lòng đăng nhập để xem đơn hàng.");
+      setMessage("Vui lòng đăng nhập để xem lịch sử đặt dịch vụ.");
       return;
     }
 
@@ -62,13 +97,11 @@ const Receipt = () => {
         headers: buildAuthHeaders(),
       });
 
-      console.log("📦 Orders response:", res.data);
-
       if (res.data.success) {
         const normalizedOrders = (res.data.orders || []).map((order) => {
           const details = Array.isArray(order.OrderItems)
             ? order.OrderItems.map((item) => ({
-                product_name: item.Product?.name || "Sản phẩm",
+                product_name: item.Product?.name || "Dịch vụ cưới",
                 product_price: Number(item.price || 0),
                 quantity: Number(item.quantity || 1),
               }))
@@ -91,15 +124,15 @@ const Receipt = () => {
         setOrders(normalizedOrders);
         setMessage(
           normalizedOrders.length === 0
-            ? "Không có đơn hàng nào."
+            ? "Bạn chưa có lịch đặt dịch vụ nào."
             : ""
         );
       } else {
         setOrders([]);
-        setMessage(res.data.message || "Không có đơn hàng.");
+        setMessage(res.data.message || "Bạn chưa có lịch đặt dịch vụ nào.");
       }
     } catch (err) {
-      console.error("❌ Error fetching orders:", err);
+      console.error("Error fetching orders:", err);
       setMessage("Không kết nối được máy chủ.");
     } finally {
       setLoading(false);
@@ -110,16 +143,16 @@ const Receipt = () => {
     fetchOrders();
   }, [fetchOrders]);
 
-  // Close modal on Escape key
   useEffect(() => {
     if (!selectedOrder) return;
-    const onKey = (e) => { if (e.key === "Escape") setSelectedOrder(null); };
+
+    const onKey = (e) => {
+      if (e.key === "Escape") setSelectedOrder(null);
+    };
+
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [selectedOrder]);
-
-  const handleOpenDetail = (order) => setSelectedOrder(order);
-  const handleCloseDetail = () => setSelectedOrder(null);
 
   const updateStatus = async (orderId) => {
     const newStatus = statusMap[orderId];
@@ -134,15 +167,12 @@ const Receipt = () => {
       };
 
       const res = await axios.post(
-        `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/orders/${orderId}/status`,
-        {
-          status: statusMapping[newStatus] || "processing",
-        },
+        `${process.env.REACT_APP_API_URL || "/api"}/orders/${orderId}/status`,
+        { status: statusMapping[newStatus] || "processing" },
         { headers: buildAuthHeaders() }
       );
 
       if (res.data.success) {
-        // Sync updated status into selectedOrder so modal reflects change
         setSelectedOrder((prev) =>
           prev && prev.order_id === orderId
             ? { ...prev, status: newStatus }
@@ -159,173 +189,212 @@ const Receipt = () => {
     }
   };
 
-  const getStatusClass = (status) => {
-    switch (status) {
-      case "Đã nhận hàng":
-      case "Đã giao sự kiện":
-      case "Đã bàn giao sự kiện":   return "status success";
-      case "Đang giao":              return "status delivering";
-      case "Đang xử lý":             return "status processing";
-      case "Hủy đơn":
-      case "Đã bị hủy bởi admin":   return "status cancel";
-      default: break;
-    }
-    const n = String(status || "").trim().toLowerCase();
-    if (n === "đang giao"  || n === "dang giao")   return "status delivering";
-    if (n === "đang xử lý" || n === "dang xu ly")  return "status processing";
-    if (n === "đã giao sự kiện" || n === "da giao su kien") return "status success";
-    if (n === "đã bàn giao sự kiện" || n === "da ban giao su kien") return "status success";
-    if (n.includes("hủy")  || n === "cancelled")   return "status cancel";
-    return "status pending";
-  };
-
-  if (loading) {
-    return (
-      <div className="receipt-page">
-        <h2>Danh sách đơn hàng</h2>
-        <p className="loading">Đang tải dữ liệu...</p>
-      </div>
-    );
-  }
-
   const orderList = Array.isArray(orders) ? orders : [];
+  const completedCount = orderList.filter((order) =>
+    getStatusClass(order.status).includes("success")
+  ).length;
+  const activeCount = orderList.filter((order) =>
+    !getStatusClass(order.status).includes("success") &&
+    !getStatusClass(order.status).includes("cancel")
+  ).length;
 
   return (
     <div className="receipt-page">
-      <h2>📦 Đơn hàng của tôi</h2>
-
-      {orderList.length === 0 ? (
-        <p className="empty">{message || "Chưa có đơn hàng nào. Hãy mua sắm ngay! 🛍️"}</p>
-      ) : (
-        <div className="receipt-list">
-          {orderList.map((order) => (
-            <div
-              key={order.order_id}
-              className="receipt-card"
-              onClick={() => handleOpenDetail(order)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => e.key === "Enter" && handleOpenDetail(order)}
-              title="Bấm để xem chi tiết"
-            >
-              <div className="receipt-summary">
-                <div>
-                  <p><strong>Mã đơn:</strong> #{order.order_id}</p>
-                  <p><strong>Ngày:</strong> {formatDate(order.created_at)}</p>
-                  <p><strong>💰</strong> {formatCurrency(order.total)}</p>
-                </div>
-                <span className={getStatusClass(order.status)}>
-                  {order.status}
-                </span>
-              </div>
-            </div>
-          ))}
+      <section className="orders-hero">
+        <div>
+          <span className="orders-eyebrow">Ngọc Thiện Wedding</span>
+          <h1>Lịch sử đặt dịch vụ</h1>
+          <p>
+            Theo dõi các gói cưới đã đặt, lịch tư vấn và trạng thái bàn giao cho ngày trọng đại.
+          </p>
         </div>
+
+        <div className="orders-stats" aria-label="Tổng quan đơn hàng">
+          <div>
+            <strong>{orderList.length}</strong>
+            <span>Tổng lịch đặt</span>
+          </div>
+          <div>
+            <strong>{activeCount}</strong>
+            <span>Đang chuẩn bị</span>
+          </div>
+          <div>
+            <strong>{completedCount}</strong>
+            <span>Đã bàn giao</span>
+          </div>
+        </div>
+      </section>
+
+      {loading ? (
+        <div className="orders-state">
+          <span className="state-icon"><FaRegHeart /></span>
+          <h2>Đang tải lịch đặt</h2>
+          <p>Chúng tôi đang kiểm tra thông tin dịch vụ của bạn.</p>
+        </div>
+      ) : orderList.length === 0 ? (
+        <div className="orders-state">
+          <span className="state-icon"><FaClipboardList /></span>
+          <h2>Chưa có lịch đặt</h2>
+          <p>{message || "Khi bạn đặt dịch vụ cưới, thông tin sẽ được lưu tại đây."}</p>
+        </div>
+      ) : (
+        <section
+          className={`receipt-list ${orderList.length === 1 ? "single" : ""}`}
+          aria-label="Danh sách lịch đặt dịch vụ"
+        >
+          {orderList.map((order) => {
+            const services = getPrimaryServices(order);
+            const leadService = services[0] || "Gói dịch vụ cưới";
+
+            return (
+              <article
+                key={order.order_id}
+                className="receipt-card"
+                onClick={() => setSelectedOrder(order)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && setSelectedOrder(order)}
+              >
+                <div className="card-topline">
+                  <span>Mã lịch #{order.order_id}</span>
+                  <span className={getStatusClass(order.status)}>{order.status}</span>
+                </div>
+
+                <h2>{leadService}</h2>
+
+                <div className="card-info">
+                  <span><FaCalendarAlt /> {formatDate(order.created_at)}</span>
+                  <span><FaMapMarkerAlt /> {order.address || "Chưa cập nhật địa điểm"}</span>
+                </div>
+
+                <div className="card-footer">
+                  <div>
+                    <span>Tạm tính</span>
+                    <strong>{formatCurrency(order.total)}</strong>
+                  </div>
+                  <button type="button">Xem chi tiết</button>
+                </div>
+              </article>
+            );
+          })}
+        </section>
       )}
 
-      {/* ── DETAIL MODAL ─────────────────────────────────── */}
       {selectedOrder && (() => {
         const order = selectedOrder;
+        const services = getPrimaryServices(order);
+
         return (
           <div
             className="order-overlay"
-            onClick={handleCloseDetail}
+            onClick={() => setSelectedOrder(null)}
             role="dialog"
             aria-modal="true"
           >
-            <div
-              className="order-modal"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="order-modal" onClick={(e) => e.stopPropagation()}>
               <button
                 className="modal-close"
-                onClick={handleCloseDetail}
+                onClick={() => setSelectedOrder(null)}
                 aria-label="Đóng"
               >
-                ✕
+                <FaTimes />
               </button>
 
               <div className="modal-head">
-                <span className="modal-id">Đơn hàng #{order.order_id}</span>
-                <span className={getStatusClass(order.status)}>
-                  {order.status}
-                </span>
+                <span className="orders-eyebrow">Chi tiết lịch đặt</span>
+                <h2>Mã lịch #{order.order_id}</h2>
+                <span className={getStatusClass(order.status)}>{order.status}</span>
               </div>
 
-              <div className="modal-body">
-                <h4>📋 Thông tin vận chuyển</h4>
-                <ul>
-                  <li><strong>Người nhận:</strong> {order.customer_name}</li>
-                  <li><strong>Điện thoại:</strong> {order.phone}</li>
-                  <li><strong>Địa chỉ:</strong> {order.address}</li>
-                  <li><strong>Ngày đặt:</strong> {formatDate(order.created_at)}</li>
-                  <li>
-                    <strong>Thanh toán:</strong>{" "}
-                    {order.payment_method === "cash"
-                      ? "💵 Thanh toán khi nhận hàng"
-                      : "🏪 Chuyển khoản"}
-                  </li>
-                  <li><strong>Tổng tiền:</strong> {formatCurrency(order.total)}</li>
-                </ul>
+              <div className="modal-grid">
+                <section>
+                  <h3>Thông tin liên hệ</h3>
+                  <dl className="detail-list">
+                    <div>
+                      <dt>Người đặt</dt>
+                      <dd>{order.customer_name || "Chưa cập nhật"}</dd>
+                    </div>
+                    <div>
+                      <dt>Số điện thoại</dt>
+                      <dd><FaPhoneAlt /> {order.phone || "Chưa cập nhật"}</dd>
+                    </div>
+                    <div>
+                      <dt>Địa điểm</dt>
+                      <dd>{order.address || "Chưa cập nhật"}</dd>
+                    </div>
+                    <div>
+                      <dt>Ngày tạo lịch</dt>
+                      <dd>{formatDate(order.created_at)}</dd>
+                    </div>
+                  </dl>
+                </section>
 
-                <h4>🎁 Chi tiết sản phẩm</h4>
-                <ul>
-                  {order.details && order.details.length > 0 ? (
-                    order.details.map((item, i) => (
-                      <li key={i}>
-                        {item.product_name} — {formatCurrency(item.product_price)} × {item.quantity}
-                      </li>
-                    ))
-                  ) : (() => {
-                    const services = parseServicesFromNote(order.note);
-                    return services.length > 0 ? (
-                      services.map((svc, i) => (
-                        <li key={i}>{svc}</li>
-                      ))
-                    ) : (
-                      <li className="empty-note">Không có chi tiết sản phẩm</li>
-                    );
-                  })()}
-                </ul>
-
-                {order.status_history && order.status_history.length > 0 && (
-                  <>
-                    <h4>📌 Lịch sử trạng thái</h4>
-                    <ul>
-                      {order.status_history.map((h, i) => (
-                        <li key={i}>
-                          <strong>{h.status}</strong> — {formatDate(h.timestamp)}
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-
-                {isAdmin && (
-                  <div className="status-update">
-                    <select
-                      value={statusMap[order.order_id] || ""}
-                      onChange={(e) =>
-                        setStatusMap((prev) => ({
-                          ...prev,
-                          [order.order_id]: e.target.value,
-                        }))
-                      }
-                    >
-                      <option value="">📍 Cập nhật trạng thái</option>
-                      {STATUS_OPTIONS.map((st) => (
-                        <option key={st} value={st}>{st}</option>
-                      ))}
-                    </select>
-                    <button
-                      disabled={!statusMap[order.order_id]}
-                      onClick={() => updateStatus(order.order_id)}
-                    >
-                      ✓ Lưu
-                    </button>
-                  </div>
-                )}
+                <section>
+                  <h3>Thanh toán</h3>
+                  <dl className="detail-list">
+                    <div>
+                      <dt>Phương thức</dt>
+                      <dd>
+                        {order.payment_method === "cash"
+                          ? "Thanh toán khi bàn giao"
+                          : "Chuyển khoản"}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt>Tổng chi phí</dt>
+                      <dd className="total-price">{formatCurrency(order.total)}</dd>
+                    </div>
+                  </dl>
+                </section>
               </div>
+
+              <section className="service-section">
+                <h3>Dịch vụ đã đặt</h3>
+                {services.length > 0 ? (
+                  <ul className="service-list">
+                    {order.details && order.details.length > 0
+                      ? order.details.map((item, i) => (
+                          <li key={i}>
+                            <span>{item.product_name}</span>
+                            <strong>{formatCurrency(item.product_price)} x {item.quantity}</strong>
+                          </li>
+                        ))
+                      : services.map((service, i) => (
+                          <li key={i}>
+                            <span>{service}</span>
+                            <strong>Đã ghi nhận</strong>
+                          </li>
+                        ))}
+                  </ul>
+                ) : (
+                  <p className="empty-note">Chưa có chi tiết dịch vụ trong lịch đặt này.</p>
+                )}
+              </section>
+
+              {isAdmin && (
+                <div className="status-update">
+                  <select
+                    value={statusMap[order.order_id] || ""}
+                    onChange={(e) =>
+                      setStatusMap((prev) => ({
+                        ...prev,
+                        [order.order_id]: e.target.value,
+                      }))
+                    }
+                  >
+                    <option value="">Cập nhật trạng thái</option>
+                    {STATUS_OPTIONS.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
+                  <button
+                    disabled={!statusMap[order.order_id]}
+                    onClick={() => updateStatus(order.order_id)}
+                  >
+                    Lưu thay đổi
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         );
