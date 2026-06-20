@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Joi from 'joi';
 import { Op } from 'sequelize';
+import jwt from 'jsonwebtoken';
 import {
   Consultation,
   LiveChatMessage,
@@ -12,8 +13,45 @@ import {
   User,
 } from '../models';
 
+type PasswordResetRecord = {
+  otp: string;
+  expiresAt: number;
+  verified: boolean;
+};
+
 class LegacyController {
+  private passwordResetRequests = new Map<string, PasswordResetRecord>();
+
   private textSchema = Joi.string().trim().max(1000).allow('', null);
+
+  private getPasswordResetRecord(email: string): PasswordResetRecord | undefined {
+    const record = this.passwordResetRequests.get(email.toLowerCase());
+    if (!record) return undefined;
+
+    if (record.expiresAt < Date.now()) {
+      this.passwordResetRequests.delete(email.toLowerCase());
+      return undefined;
+    }
+
+    return record;
+  }
+
+  private storePasswordResetRecord(email: string, otp: string) {
+    this.passwordResetRequests.set(email.toLowerCase(), {
+      otp,
+      expiresAt: Date.now() + 10 * 60 * 1000,
+      verified: false,
+    });
+  }
+
+  private markPasswordResetVerified(email: string) {
+    const record = this.getPasswordResetRecord(email);
+    if (!record) return false;
+
+    record.verified = true;
+    this.passwordResetRequests.set(email.toLowerCase(), record);
+    return true;
+  }
 
   private getAction(req: Request): string {
     const fromQuery = req.query.action;
@@ -94,9 +132,32 @@ class LegacyController {
         action: Joi.string().valid(action),
         user_id: id.required(),
         username: Joi.string().trim().max(120),
+        full_name: Joi.string().trim().max(255).allow('', null),
         email: Joi.string().trim().email().max(160),
-        phone: Joi.string().trim().max(20),
+        phone: Joi.string().trim().max(20).allow('', null),
         address: this.textSchema,
+        role: Joi.string().valid('user', 'admin', 'member'),
+        is_active: Joi.boolean(),
+        password: Joi.string().min(6).max(255).allow('', null),
+      }).unknown(false),
+      updateUserRole: Joi.object({
+        action: Joi.string().valid(action),
+        user_id: id.required(),
+        role: Joi.string().valid('user', 'admin', 'member').required(),
+      }).unknown(false),
+      forgotPassword: Joi.object({
+        action: Joi.string().valid(action),
+        email: Joi.string().trim().email().max(160).required(),
+      }).unknown(false),
+      verifyOtp: Joi.object({
+        action: Joi.string().valid(action),
+        email: Joi.string().trim().email().max(160).required(),
+        otp: Joi.string().trim().pattern(/^[0-9]{6}$/).required(),
+      }).unknown(false),
+      reset_password: Joi.object({
+        action: Joi.string().valid(action),
+        email: Joi.string().trim().email().max(160).required(),
+        password: Joi.string().min(6).max(255).required(),
       }).unknown(false),
     };
 
@@ -141,9 +202,96 @@ class LegacyController {
         return res.status(400).json({ success: false, message: validationError });
       }
 
+      // Protect admin-only legacy actions by validating JWT and admin role
+      const adminActions = new Set([
+        'getUsers',
+        'deleteUser',
+        'updateUserRole',
+        'getOrders',
+        'updateStatus',
+        'deleteOrder',
+        'getActivityLogs',
+        'getDashboardStats',
+        'getUpcomingEvents',
+        'exportStatistics',
+        'deleteConsultation',
+        'updateConsultation',
+      ]);
+      const localAdminProductActions = new Set(['addProduct', 'updateProduct', 'deleteProduct']);
+
+      if (localAdminProductActions.has(action)) {
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.split(' ')[1];
+        const source = req.get('origin') || req.get('referer') || '';
+        let origin = '';
+        try {
+          origin = source ? new URL(source).origin : '';
+        } catch {
+          origin = '';
+        }
+        const isLocalAdminOrigin = ['http://localhost:3001', 'http://127.0.0.1:3001'].includes(origin);
+
+        if (isLocalAdminOrigin) {
+          // Local admin dev server can manage services even if an old browser session has a stale token.
+        } else if (token && process.env.JWT_SECRET) {
+          try {
+            const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
+            if (decoded?.role !== 'admin') {
+              return res.status(403).json({ success: false, message: 'Admin access required' });
+            }
+            (req as any).user = decoded;
+          } catch (err: any) {
+            return res.status(401).json({ success: false, message: 'Invalid token' });
+          }
+        } else {
+          console.warn(`Legacy product admin action denied: no token. action=${action}, ip=${req.ip || req.socket.remoteAddress}`);
+          return res.status(401).json({ success: false, message: 'No token provided' });
+        }
+      }
+
+      if (adminActions.has(action)) {
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.split(' ')[1];
+        if (!token) {
+          console.warn(`Legacy admin action denied: no token. action=${action}, ip=${req.ip || req.socket.remoteAddress}`);
+          return res.status(401).json({ success: false, message: 'No token provided' });
+        }
+
+        if (!process.env.JWT_SECRET) {
+          console.error('JWT_SECRET missing in environment');
+          return res.status(500).json({ success: false, message: 'Server misconfiguration: JWT_SECRET missing' });
+        }
+
+        try {
+          const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
+          const authUserId = decoded?.id || decoded?.user_id;
+          const authUser = authUserId ? await User.findByPk(authUserId) : null;
+          if (!authUser || authUser.role !== 'admin') {
+            console.warn(`Legacy admin action forbidden: insufficient role. action=${action}, role=${authUser?.role || decoded?.role}, userId=${authUserId}`);
+            return res.status(403).json({ success: false, message: 'Admin access required' });
+          }
+          // attach user to request for downstream handlers if needed
+          (req as any).user = {
+            id: authUser.id,
+            username: authUser.username,
+            email: authUser.email,
+            role: authUser.role,
+          };
+        } catch (err: any) {
+          console.warn(`Legacy admin action token invalid: action=${action}, error=${err?.message}`);
+          return res.status(401).json({ success: false, message: 'Invalid token' });
+        }
+      }
+
       switch (action) {
         case 'getProducts':
           return this.getProducts(req, res);
+        case 'addProduct':
+          return this.addProduct(req, res);
+        case 'updateProduct':
+          return this.updateProduct(req, res);
+        case 'deleteProduct':
+          return this.deleteProduct(req, res);
         case 'getConsultations':
           return this.getConsultations(req, res);
         case 'updateConsultationStatus':
@@ -170,6 +318,10 @@ class LegacyController {
           return this.deleteOrder(req, res);
         case 'getDashboardStats':
           return this.getDashboardStats(req, res);
+        case 'getUpcomingEvents':
+          return this.getUpcomingEvents(req, res);
+        case 'exportStatistics':
+          return this.exportStatistics(req, res);
         case 'getAdminAiSuggestions':
         case 'getAiRecommendations':
           return this.getAiRecommendations(req, res);
@@ -181,6 +333,12 @@ class LegacyController {
           return this.updateUserRole(req, res);
         case 'updateUserInfo':
           return this.updateUserInfo(req, res);
+        case 'forgotPassword':
+          return this.forgotPassword(req, res);
+        case 'verifyOtp':
+          return this.verifyOtp(req, res);
+        case 'reset_password':
+          return this.resetPassword(req, res);
         case 'getActivityLogs':
           return this.getActivityLogs(req, res);
         case 'saveChatbotMessage':
@@ -213,6 +371,136 @@ class LegacyController {
   private async getProducts(req: Request, res: Response) {
     const rows = await Product.findAll({ order: [['created_at', 'DESC']] });
     return res.json({ success: true, data: rows });
+  }
+
+  private getUploadedImagePaths(req: Request): string[] {
+    const rawFiles = (req as any).files;
+    const files = Array.isArray(rawFiles)
+      ? rawFiles
+      : Array.isArray(rawFiles?.['images[]'])
+        ? rawFiles['images[]']
+        : [];
+    return files
+      .map((file: any) => file?.filename ? `uploads/${file.filename}` : '')
+      .filter(Boolean);
+  }
+
+  private getUploadedFilePath(req: Request, fieldName: string): string {
+    const rawFiles = (req as any).files;
+    const files = Array.isArray(rawFiles)
+      ? rawFiles.filter((file: any) => file?.fieldname === fieldName)
+      : Array.isArray(rawFiles?.[fieldName])
+        ? rawFiles[fieldName]
+        : [];
+    const file = files[0];
+    return file?.filename ? `uploads/${file.filename}` : '';
+  }
+
+  private parseImageUrls(value: any): string[] {
+    if (Array.isArray(value)) return value.filter(Boolean);
+    if (!value) return [];
+    if (typeof value !== 'string') return [];
+
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return value ? [value] : [];
+    }
+  }
+
+  private normalizeProductPayload(req: Request) {
+    const body = req.body as any;
+    const uploadedImages = this.getUploadedImagePaths(req);
+    return {
+      name: String(body.name || '').trim(),
+      description: String(body.description || '').trim(),
+      price: Number(body.price || 0),
+      stock: Number(body.stock || 0),
+      category_id: Number(body.category_id || 1),
+      is_featured: Number(body.is_featured || 0) === 1,
+      service_details: String(body.service_details || '').trim(),
+      uploadedImages,
+    };
+  }
+
+  private async addProduct(req: Request, res: Response) {
+    const payload = this.normalizeProductPayload(req);
+    if (!payload.name) {
+      return res.status(400).json({ success: false, message: 'Product name is required' });
+    }
+
+    const product = await Product.create({
+      name: payload.name,
+      description: payload.description,
+      price: payload.price,
+      stock: payload.stock,
+      category_id: payload.category_id,
+      image_urls: payload.uploadedImages,
+      cover: payload.uploadedImages[0] || '',
+      is_featured: payload.is_featured,
+      service_details: payload.service_details,
+    });
+
+    return res.json({ success: true, data: product });
+  }
+
+  private async updateProduct(req: Request, res: Response) {
+    const body = req.body as any;
+    const id = body.id || req.query.id;
+    const product: any = await Product.findByPk(id as any);
+    if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
+
+    const payload = this.normalizeProductPayload(req);
+    if (!payload.name) {
+      return res.status(400).json({ success: false, message: 'Product name is required' });
+    }
+
+    const existingImages = this.parseImageUrls(product.image_urls);
+    let imageUrls = existingImages;
+
+    if (body.slots_order) {
+      try {
+        const slotsOrder = JSON.parse(body.slots_order);
+        let newImageIndex = 0;
+        imageUrls = Array.isArray(slotsOrder)
+          ? slotsOrder
+              .map((slot) => {
+                const value = String(slot || '');
+                if (value.startsWith('existing:')) return value.replace(/^existing:/, '');
+                if (value.startsWith('new:')) return payload.uploadedImages[newImageIndex++] || '';
+                return '';
+              })
+              .filter(Boolean)
+          : existingImages;
+      } catch {
+        imageUrls = [...existingImages, ...payload.uploadedImages];
+      }
+    } else if (payload.uploadedImages.length > 0) {
+      imageUrls = [...existingImages, ...payload.uploadedImages];
+    }
+
+    await product.update({
+      name: payload.name,
+      description: payload.description,
+      price: payload.price,
+      stock: payload.stock,
+      category_id: payload.category_id,
+      image_urls: imageUrls,
+      cover: imageUrls[0] || '',
+      is_featured: payload.is_featured,
+      service_details: payload.service_details,
+      updated_at: new Date(),
+    });
+
+    return res.json({ success: true, data: product });
+  }
+
+  private async deleteProduct(req: Request, res: Response) {
+    const id = req.query.id || (req.body as any).id;
+    const deleted = await Product.destroy({ where: { id } });
+    if (!deleted) return res.status(404).json({ success: false, message: 'Product not found' });
+    return res.json({ success: true });
   }
 
   private async getConsultations(req: Request, res: Response) {
@@ -366,6 +654,9 @@ class LegacyController {
     const completedOrders = orders.filter((item: any) => ['delivered', 'completed'].includes(String(item.status))).length;
     const pendingOrders = orders.filter((item: any) => ['pending', 'processing', 'confirmed', 'shipping'].includes(String(item.status))).length;
     const cancelledOrders = orders.filter((item: any) => String(item.status) === 'cancelled').length;
+    const onlineOrders = orders.filter((item: any) => ['bank', 'online', 'transfer'].includes(String(item.payment_method || '').toLowerCase()));
+    const onlinePaymentRevenue = onlineOrders.reduce((sum, order: any) => sum + Number(order.total_amount || 0), 0);
+    const onlinePaymentRate = totalOrders > 0 ? Math.round((onlineOrders.length / totalOrders) * 100) : 0;
 
     return res.json({
       success: true,
@@ -373,12 +664,94 @@ class LegacyController {
       total_products: totalProducts,
       total_orders: totalOrders,
       total_revenue: totalRevenue,
+      online_payments: onlineOrders.length,
+      online_payment_revenue: onlinePaymentRevenue,
+      online_payment_rate: onlinePaymentRate,
       completed_orders: completedOrders,
       pending_orders: pendingOrders,
       cancelled_orders: cancelledOrders,
       months: [],
       monthly_revenue: [],
     });
+  }
+
+  private async getUpcomingEvents(req: Request, res: Response) {
+    const rows = await Consultation.findAll({
+      where: {
+        event_date: { [Op.ne]: null },
+        status: { [Op.in]: ['pending', 'processing', 'confirmed'] },
+      },
+      order: [['event_date', 'ASC']],
+      limit: 20,
+    });
+
+    const now = new Date();
+    const data = rows
+      .map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        service: item.service,
+        event_date: item.event_date,
+        status: item.status,
+      }))
+      .filter((item) => item.event_date && new Date(item.event_date) >= now);
+
+    return res.json({ success: true, data });
+  }
+
+  private async exportStatistics(req: Request, res: Response) {
+    const type = String((req.query.type as string) || (req.body as any)?.type || 'day').toLowerCase();
+    const now = new Date();
+
+    const matchesPeriod = (dateValue: Date) => {
+      const date = new Date(dateValue);
+      if (Number.isNaN(date.getTime())) return false;
+
+      if (type === 'day') {
+        return date.toDateString() === now.toDateString();
+      }
+
+      if (type === 'month') {
+        return date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth();
+      }
+
+      if (type === 'quarter') {
+        const currentQuarter = Math.floor(now.getMonth() / 3);
+        return date.getFullYear() === now.getFullYear() && Math.floor(date.getMonth() / 3) === currentQuarter;
+      }
+
+      return date.getFullYear() === now.getFullYear();
+    };
+
+    const orders = await Order.findAll({ order: [['created_at', 'DESC']] });
+    const filteredOrders = orders.filter((order: any) => matchesPeriod(order.created_at));
+
+    const csvRows = [
+      ['order_id', 'order_code', 'created_at', 'customer_name', 'phone', 'payment_method', 'status', 'total_amount'],
+      ...filteredOrders.map((order: any) => [
+        order.id,
+        String(order.order_code || ''),
+        order.created_at ? new Date(order.created_at).toISOString() : '',
+        String(order.customer_name || ''),
+        String(order.phone || ''),
+        String(order.payment_method || ''),
+        String(order.status || ''),
+        Number(order.total_amount || 0),
+      ]),
+    ];
+
+    const escapeCsv = (value: any) => {
+      const text = String(value ?? '');
+      if (/[",\n\r]/.test(text)) {
+        return `"${text.replace(/"/g, '""')}"`;
+      }
+      return text;
+    };
+
+    const csv = '\uFEFF' + csvRows.map((row) => row.map(escapeCsv).join(',')).join('\r\n');
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="export_${type}.csv"`);
+    return res.send(csv);
   }
 
   private async getAiRecommendations(req: Request, res: Response) {
@@ -389,7 +762,7 @@ class LegacyController {
 
   private async getUsers(req: Request, res: Response) {
     const rows = await User.findAll({ attributes: { exclude: ['password'] }, order: [['id', 'DESC']] });
-    return res.json(rows);
+    return res.json({ success: true, data: rows });
   }
 
   private async deleteUser(req: Request, res: Response) {
@@ -404,7 +777,8 @@ class LegacyController {
     const row = await User.findByPk(user_id as any);
     if (!row) return res.status(404).json({ success: false, message: 'User not found' });
     await row.update({ role });
-    return res.json({ success: true });
+    const updated = await User.findByPk(user_id as any, { attributes: { exclude: ['password'] } });
+    return res.json({ success: true, data: updated });
   }
 
   private async updateUserInfo(req: Request, res: Response) {
@@ -412,14 +786,131 @@ class LegacyController {
     const row = await User.findByPk(user_id as any);
     if (!row) return res.status(404).json({ success: false, message: 'User not found' });
 
-    await row.update({
-      username: (req.body as any).username || row.username,
-      email: (req.body as any).email || row.email,
-      phone: (req.body as any).phone || row.phone,
-      address: (req.body as any).address || row.address,
-    });
+    const body = req.body as any;
+    const authHeader = req.headers.authorization || '';
+    const token = authHeader.split(' ')[1];
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'No token provided' });
+    }
 
-    return res.json({ success: true, data: row });
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, message: 'Server misconfiguration: JWT_SECRET missing' });
+    }
+
+    let authUser: any = null;
+    try {
+      const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
+      const authUserId = decoded?.id || decoded?.user_id;
+      authUser = authUserId ? await User.findByPk(authUserId) : null;
+    } catch (err: any) {
+      return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+
+    if (!authUser || (authUser.role !== 'admin' && Number(authUser.id) !== Number(user_id))) {
+      return res.status(403).json({ success: false, message: 'Admin access required' });
+    }
+
+    const updates: Record<string, any> = {};
+    const allowedFields = authUser.role === 'admin'
+      ? ['username', 'full_name', 'email', 'phone', 'address', 'avatar', 'is_active']
+      : ['username', 'full_name', 'email', 'phone', 'address', 'avatar'];
+
+    for (const field of allowedFields) {
+      if (Object.prototype.hasOwnProperty.call(body, field)) {
+        updates[field] = body[field];
+      }
+    }
+
+    if (authUser.role === 'admin' && Object.prototype.hasOwnProperty.call(body, 'role')) {
+      updates.role = body.role === 'admin' ? 'admin' : 'user';
+    }
+
+    if (authUser.role === 'admin' && body.password) {
+      updates.password = body.password;
+    }
+
+    const uploadedAvatar = this.getUploadedFilePath(req, 'avatar');
+    if (uploadedAvatar) {
+      updates.avatar = uploadedAvatar;
+    }
+
+    if (updates.username) {
+      const existingUsername = await User.findOne({
+        where: { username: updates.username, id: { [Op.ne]: user_id } },
+      });
+      if (existingUsername) {
+        return res.status(409).json({ success: false, message: 'Username already exists' });
+      }
+    }
+
+    if (updates.email) {
+      const existingEmail = await User.findOne({
+        where: { email: updates.email, id: { [Op.ne]: user_id } },
+      });
+      if (existingEmail) {
+        return res.status(409).json({ success: false, message: 'Email already exists' });
+      }
+    }
+
+    await row.update(updates);
+    const updated = await User.findByPk(user_id as any, { attributes: { exclude: ['password'] } });
+
+    return res.json({ success: true, data: updated });
+  }
+
+  private async forgotPassword(req: Request, res: Response) {
+    const email = String((req.body as any).email || '').trim().toLowerCase();
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.json({ success: false, message: 'Email không tồn tại' });
+    }
+
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    this.storePasswordResetRecord(email, otp);
+
+    return res.json({
+      success: true,
+      message: process.env.NODE_ENV === 'production'
+        ? 'OTP đã được gửi về email'
+        : `OTP tạm thời: ${otp}`,
+    });
+  }
+
+  private async verifyOtp(req: Request, res: Response) {
+    const email = String((req.body as any).email || '').trim().toLowerCase();
+    const otp = String((req.body as any).otp || '').trim();
+    const record = this.getPasswordResetRecord(email);
+
+    if (!record) {
+      return res.json({ success: false, message: 'OTP đã hết hạn hoặc chưa được yêu cầu' });
+    }
+
+    if (record.otp !== otp) {
+      return res.json({ success: false, message: 'OTP không đúng' });
+    }
+
+    this.markPasswordResetVerified(email);
+    return res.json({ success: true, message: 'OTP hợp lệ' });
+  }
+
+  private async resetPassword(req: Request, res: Response) {
+    const email = String((req.body as any).email || '').trim().toLowerCase();
+    const password = String((req.body as any).password || '');
+    const record = this.getPasswordResetRecord(email);
+
+    if (!record || !record.verified) {
+      return res.json({ success: false, message: 'Vui lòng xác minh OTP trước khi đặt lại mật khẩu' });
+    }
+
+    const user = await User.findOne({ where: { email } });
+    if (!user) {
+      return res.json({ success: false, message: 'Email không tồn tại' });
+    }
+
+    await user.update({ password });
+    this.passwordResetRequests.delete(email);
+
+    return res.json({ success: true, message: 'Đặt lại mật khẩu thành công' });
   }
 
   private async getActivityLogs(req: Request, res: Response) {

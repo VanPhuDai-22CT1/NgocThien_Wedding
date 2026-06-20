@@ -1,10 +1,10 @@
 import { Sequelize } from 'sequelize';
-import dotenv from 'dotenv';
+import { loadBackendEnv } from './env';
 
-dotenv.config();
+loadBackendEnv();
 
 const sequelize = new Sequelize(
-  process.env.DB_NAME || 'shop',
+  process.env.DB_NAME || 'ngocthienwedding',
   process.env.DB_USER || 'root',
   process.env.DB_PASSWORD || '',
   {

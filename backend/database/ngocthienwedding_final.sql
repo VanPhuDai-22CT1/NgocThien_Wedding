@@ -344,6 +344,7 @@ CREATE TABLE `users` (
   `full_name` varchar(255) DEFAULT NULL,
   `phone` varchar(20) DEFAULT NULL,
   `address` text DEFAULT NULL,
+  `avatar` varchar(255) DEFAULT NULL,
   `role` enum('user','admin') NOT NULL DEFAULT 'user',
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` datetime NOT NULL DEFAULT current_timestamp(),
@@ -361,7 +362,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,NULL,'testuser1','test1@test.com','$2b$10$StcJ20CzkGRRV7qJI49aYuDLSxsL9HuO4Re3THagV0o9iiD6c634u','',NULL,NULL,'user',1,'2026-05-13 15:53:38','2026-05-13 15:53:38'),(2,NULL,'Đại Văn ','dai_2251220039@dau.edu.vn','$2b$10$QFEixJTPxaWQHWWyBoyJjO3Ja8wY616x18A.MDnUN6cItc2C/uY.y','',NULL,NULL,'admin',1,'2026-05-13 16:02:36','2026-05-13 16:03:50'),(3,NULL,'Vanphudai24122004@gmail.com','Vanphudai24122004@gmail.com','$2b$10$VRqyOWuPaabMF/qMj487/u2WkAHHo37xPQTqSHJkJhuFeYQz5QpGq','',NULL,NULL,'user',1,'2026-05-13 16:28:04','2026-05-13 16:28:04');
+INSERT INTO `users` VALUES (1,NULL,'testuser1','test1@test.com','$2b$10$StcJ20CzkGRRV7qJI49aYuDLSxsL9HuO4Re3THagV0o9iiD6c634u','',NULL,NULL,NULL,'user',1,'2026-05-13 15:53:38','2026-05-13 15:53:38'),(2,NULL,'Đại Văn ','dai_2251220039@dau.edu.vn','$2b$10$QFEixJTPxaWQHWWyBoyJjO3Ja8wY616x18A.MDnUN6cItc2C/uY.y','',NULL,NULL,NULL,'admin',1,'2026-05-13 16:02:36','2026-05-13 16:03:50'),(3,NULL,'Vanphudai24122004@gmail.com','Vanphudai24122004@gmail.com','$2b$10$VRqyOWuPaabMF/qMj487/u2WkAHHo37xPQTqSHJkJhuFeYQz5QpGq','',NULL,NULL,NULL,'user',1,'2026-05-13 16:28:04','2026-05-13 16:28:04');
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;

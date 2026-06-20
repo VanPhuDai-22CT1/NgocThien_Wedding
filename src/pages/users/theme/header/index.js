@@ -1,28 +1,52 @@
 import React, { memo, useEffect, useRef, useState } from "react";
-import "./style.scss";
-import { useNavigate, Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { FaBars, FaUser } from "react-icons/fa6";
 import { FaSearch, FaSignOutAlt } from "react-icons/fa";
+import { FaBars, FaUser } from "react-icons/fa6";
 import { CgMail } from "react-icons/cg";
 import { ROUTERS } from "utils/router";
 import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import "./style.scss";
 
-// ===== IMPORT áº¢NH HERO =====
 import nen1 from "assets/users/images/hero/nen1.jpg";
 import nen2 from "assets/users/images/hero/nen2.jpg";
 import nen3 from "assets/users/images/hero/nen3.jpg";
 
-const CUSTOMIZE_API = "http://localhost:4000/api/homepage-config";
+const CUSTOMIZE_API = "/api/homepage-config";
 
-// ===== DATA =====
-const categories = [
-  "Thực đơn",
+const serviceCategories = [
   "Trang trí gia tiên",
-  "Mâm quả kết rồng phượng",
+  "Trang trí tiệc cưới",
+  "Chụp ảnh cưới",
+  "Quay phim cưới",
+  "Thực đơn tiệc cưới",
+  "Mâm quả cưới hỏi",
+  "Dịch vụ bê tráp",
   "Cho thuê khung rạp",
-  "Dịch vụ bề tráp",
+  "Âm thanh ánh sáng",
+  "Trang phục cưới",
+  "Xe hoa",
+  "Thiệp cưới & quà cưới",
   "Trọn gói ngày cưới",
+];
+
+const serviceMenuGroups = [
+  {
+    title: "Trang trí - tiệc",
+    items: ["Trang trí gia tiên", "Trang trí tiệc cưới", "Thực đơn tiệc cưới"],
+  },
+  {
+    title: "Hình ảnh - lưu niệm",
+    items: ["Chụp ảnh cưới", "Quay phim cưới", "Thiệp cưới & quà cưới"],
+  },
+  {
+    title: "Lễ vật - nhân sự",
+    items: ["Mâm quả cưới hỏi", "Dịch vụ bê tráp", "Trang phục cưới"],
+  },
+  {
+    title: "Vận hành ngày cưới",
+    items: ["Cho thuê khung rạp", "Âm thanh ánh sáng", "Xe hoa", "Trọn gói ngày cưới"],
+  },
 ];
 
 const menus = [
@@ -34,29 +58,16 @@ const menus = [
   { name: "Gói đã chọn", path: ROUTERS.USER.PROFILE },
 ];
 
-const serviceMenuGroups = [
-  {
-    title: "Khung rạp",
-    items: ["Cho thuê khung rạp", "Trọn gói ngày cưới"],
-  },
-  {
-    title: "Lễ vật - tráp",
-    items: ["Dịch vụ bề tráp", "Mâm quả kết rồng phượng"],
-  },
-  {
-    title: "Trang trí - tiệc",
-    items: ["Trang trí gia tiên", "Thực đơn"],
-  },
-];
-
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const sliderRef = useRef(null);
 
   const [showCategories, setShowCategories] = useState(false);
   const [searchText, setSearchText] = useState("");
   const [username, setUsername] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [currentImage, setCurrentImage] = useState(0);
   const [heroConfig, setHeroConfig] = useState({
     slider: Array(3).fill(""),
     background: "",
@@ -65,7 +76,7 @@ const Header = () => {
   const toSiteImageUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    return `http://localhost:4000/${path.replace(/^\/+/, "")}`;
+    return `/${path.replace(/^\/+/, "")}`;
   };
 
   const images = [
@@ -74,34 +85,28 @@ const Header = () => {
     toSiteImageUrl(heroConfig.slider[2]) || nen3,
   ];
   const heroBackground = toSiteImageUrl(heroConfig.background);
-
-  const [currentImage, setCurrentImage] = useState(0);
-  const sliderRef = useRef(null);
-
   const isHome = location.pathname === ROUTERS.USER.HOME;
 
-  /* ================= LOAD USERNAME ================= */
   useEffect(() => {
     const storedUser = getAuthItem("username");
     if (storedUser) setUsername(storedUser);
   }, []);
 
-  /* ================= AUTO SLIDER ================= */
   useEffect(() => {
     axios
       .get(`${CUSTOMIZE_API}?action=getHomepageImages`)
       .then((res) => {
-        if (res.data?.success) {
-          const data = res.data.data || {};
-          const slider = Array.isArray(data.headerSliderImages)
-            ? [...data.headerSliderImages, ...Array(3).fill("")].slice(0, 3)
-            : Array(3).fill("");
+        if (!res.data?.success) return;
 
-          setHeroConfig({
-            slider,
-            background: data.heroBackgroundImage || "",
-          });
-        }
+        const data = res.data.data || {};
+        const slider = Array.isArray(data.headerSliderImages)
+          ? [...data.headerSliderImages, ...Array(3).fill("")].slice(0, 3)
+          : Array(3).fill("");
+
+        setHeroConfig({
+          slider,
+          background: data.heroBackgroundImage || "",
+        });
       })
       .catch((err) => {
         console.error("Load header images error:", err);
@@ -116,36 +121,22 @@ const Header = () => {
     return () => clearInterval(sliderRef.current);
   }, [images.length]);
 
-  /* ================= SEARCH DEBOUNCE ================= */
   useEffect(() => {
     const delay = setTimeout(() => {
-      if (!searchText.trim()) return;
+      const keyword = searchText.trim();
+      if (!keyword) return;
 
-      navigate(
-        `${ROUTERS.USER.ProductsPage}?search=${encodeURIComponent(
-          searchText
-        )}`
-      );
+      navigate(`${ROUTERS.USER.ProductsPage}?search=${encodeURIComponent(keyword)}`);
     }, 500);
 
     return () => clearTimeout(delay);
   }, [searchText, navigate]);
 
-  /* ================= CATEGORY CLICK ================= */
-  const handleCategoryClick = (category) => {
-    navigate(
-      `${ROUTERS.USER.ProductsPage}?category=${encodeURIComponent(category)}`
-    );
+  const goToServiceCategory = (category) => {
+    navigate(`${ROUTERS.USER.ProductsPage}?category=${encodeURIComponent(category)}`);
     setShowCategories(false);
   };
 
-  const goToServiceCategory = (category) => {
-    navigate(
-      `${ROUTERS.USER.ProductsPage}?category=${encodeURIComponent(category)}`
-    );
-  };
-
-  /* ================= LOGOUT ================= */
   const handleLogout = () => {
     clearAuthSession();
     setUsername("");
@@ -155,7 +146,6 @@ const Header = () => {
 
   return (
     <>
-      {/* ===== HEADER TOP ===== */}
       <div className="header__top">
         <div className="header__top-inner">
           <div className="header__top-left">
@@ -163,23 +153,26 @@ const Header = () => {
             {username ? (
               <span>Xin chào, {username}</span>
             ) : (
-              <span>Dịch vụ cưới hỏi Ngọc Thiện 💍</span>
+              <span>Dịch vụ cưới hỏi Ngọc Thiện</span>
             )}
           </div>
 
           <div className="header__top-right">
             {username ? (
               <div className="user-dropdown">
-                <div
+                <button
+                  type="button"
                   className="user-icon"
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => setShowUserMenu((prev) => !prev)}
+                  aria-label="Mở menu tài khoản"
                 >
                   <FaUser />
-                </div>
+                </button>
 
                 {showUserMenu && (
                   <div className="user-menu">
                     <button
+                      type="button"
                       onClick={() => {
                         navigate(ROUTERS.USER.CustomerInfo);
                         setShowUserMenu(false);
@@ -187,8 +180,7 @@ const Header = () => {
                     >
                       <FaUser /> Xem thông tin
                     </button>
-
-                    <button onClick={handleLogout}>
+                    <button type="button" onClick={handleLogout}>
                       <FaSignOutAlt /> Đăng xuất
                     </button>
                   </div>
@@ -203,7 +195,6 @@ const Header = () => {
         </div>
       </div>
 
-      {/* ===== HEADER MAIN ===== */}
       <header className="header__main">
         <div className="header__main-inner">
           <Link to={ROUTERS.USER.HOME} className="header__logo">
@@ -212,20 +203,20 @@ const Header = () => {
 
           <nav className="header__menu">
             <ul>
-              {menus.map((m) => {
-                const isServiceMenu = m.name === "Dịch vụ";
+              {menus.map((menu) => {
+                const isServiceMenu = menu.name === "Dịch vụ";
 
                 if (!isServiceMenu) {
                   return (
-                    <li key={m.name}>
-                      <Link to={m.path}>{m.name}</Link>
+                    <li key={menu.name}>
+                      <Link to={menu.path}>{menu.name}</Link>
                     </li>
                   );
                 }
 
                 return (
-                  <li key={m.name} className="menu-item menu-item--services">
-                    <Link to={m.path}>{m.name}</Link>
+                  <li key={menu.name} className="menu-item menu-item--services">
+                    <Link to={menu.path}>{menu.name}</Link>
 
                     <div className="service-dropdown">
                       {serviceMenuGroups.map((group) => (
@@ -252,37 +243,47 @@ const Header = () => {
             </ul>
           </nav>
 
-          {/* SEARCH TOOL REALTIME */}
           <div className="header__search">
             <input
               placeholder="Tìm kiếm dịch vụ..."
               value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
+              onChange={(event) => setSearchText(event.target.value)}
             />
-            <button type="button">
+            <button
+              type="button"
+              onClick={() => {
+                const keyword = searchText.trim();
+                if (keyword) {
+                  navigate(`${ROUTERS.USER.ProductsPage}?search=${encodeURIComponent(keyword)}`);
+                }
+              }}
+              aria-label="Tìm kiếm"
+            >
               <FaSearch />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ===== HERO ===== */}
       {isHome && (
         <section className="hero">
           <div className="hero__inner">
             <aside className="hero__categories">
-              <div
+              <button
+                type="button"
                 className="hero__categories__all"
-                onClick={() => setShowCategories(!showCategories)}
+                onClick={() => setShowCategories((prev) => !prev)}
               >
-                <FaBars /> Danh Sách Dịch Vụ
-              </div>
+                <FaBars /> Danh sách dịch vụ
+              </button>
 
               {showCategories && (
                 <ul>
-                  {categories.map((c) => (
-                    <li key={c} onClick={() => handleCategoryClick(c)}>
-                      {c}
+                  {serviceCategories.map((category) => (
+                    <li key={category}>
+                      <button type="button" onClick={() => goToServiceCategory(category)}>
+                        {category}
+                      </button>
                     </li>
                   ))}
                 </ul>
@@ -303,32 +304,22 @@ const Header = () => {
               }
             >
               <div className="hero__content">
-                <span className="hero__badge">
-                  💍 Trọn gói cưới hỏi
-                </span>
-                <h2 className="wedding-title">
-                  Ngọc Thiện Wedding
-                </h2>
+                <span className="hero__badge">Trọn gói cưới hỏi</span>
+                <h2 className="wedding-title">Ngọc Thiện Wedding</h2>
 
                 <button
                   className="btn-3d"
-                  onClick={() =>
-                    navigate(ROUTERS.USER.ProductsPage)
-                  }
+                  type="button"
+                  onClick={() => navigate(ROUTERS.USER.ProductsPage)}
                 >
                   <span className="shadow"></span>
                   <span className="edge"></span>
-                  <span className="front text">
-                    Xem dịch vụ
-                  </span>
+                  <span className="front text">Xem dịch vụ</span>
                 </button>
               </div>
 
               <div className="hero__image">
-                <img
-                  src={images[currentImage]}
-                  alt="Ngọc Thiện Wedding"
-                />
+                <img src={images[currentImage]} alt="Ngọc Thiện Wedding" />
               </div>
             </div>
           </div>

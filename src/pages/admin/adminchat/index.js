@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { getAuthItem } from "utils/authStorage";
 import { getImageUrl } from "utils/image";
 import {
@@ -18,7 +19,7 @@ import {
 } from "react-icons/fa";
 import "./style.scss";
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
+const API = `${process.env.REACT_APP_API_URL || "/api"}/legacy`;
 
 const normalizeText = (value = "") =>
   value
@@ -45,7 +46,7 @@ export default function AdminChat() {
   const loadSessions = useCallback(async () => {
     try {
       setLoadingSessions(true);
-      const res = await axios.get(`${API}?action=getLiveChatSessions&_=${Date.now()}`);
+      const res = await apiClient.get(`/legacy`, { params: { action: "getLiveChatSessions", _: Date.now() }, headers: buildAuthHeaders() });
       const rows = res.data?.success && Array.isArray(res.data.data) ? res.data.data : [];
       setSessions(rows);
 
@@ -72,9 +73,7 @@ export default function AdminChat() {
 
     try {
       setLoadingMessages(true);
-      const res = await axios.get(
-        `${API}?action=getLiveChatMessages&chat_session=${encodeURIComponent(sessionId)}&_=${Date.now()}`
-      );
+      const res = await apiClient.get(`/legacy`, { params: { action: "getLiveChatMessages", chat_session: sessionId, _: Date.now() }, headers: buildAuthHeaders() });
 
       if (res.data?.success) {
         setMessages(Array.isArray(res.data.data) ? res.data.data : []);
@@ -82,11 +81,7 @@ export default function AdminChat() {
         setMessages([]);
       }
 
-      await axios.post(
-        `${API}?action=markLiveChatRead`,
-        { chat_session: sessionId },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await apiClient.post(`/legacy`, { action: "markLiveChatRead", chat_session: sessionId }, { headers: buildAuthHeaders() });
     } catch (error) {
       console.error("Load live messages error:", error);
       setMessages([]);
@@ -97,7 +92,7 @@ export default function AdminChat() {
 
   const loadProducts = useCallback(async () => {
     try {
-      const res = await axios.get(`${API}?action=getProducts&_=${Date.now()}`);
+      const res = await apiClient.get(`/legacy`, { params: { action: "getProducts", _: Date.now() }, headers: buildAuthHeaders() });
       const rows = res.data?.success && Array.isArray(res.data.data) ? res.data.data : [];
       setProducts(rows);
     } catch (error) {
@@ -152,17 +147,7 @@ export default function AdminChat() {
     if (!content || !selectedSession) return;
 
     try {
-      await axios.post(
-        `${API}?action=sendLiveChatMessage`,
-        {
-          chat_session: selectedSession,
-          sender: "admin",
-          message: content,
-          customer_name: activeSessionInfo?.customer_name || "Khách hàng",
-          customer_email: activeSessionInfo?.customer_email || "",
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await apiClient.post(`/legacy`, { action: "sendLiveChatMessage", chat_session: selectedSession, sender: "admin", message: content, customer_name: activeSessionInfo?.customer_name || "Khách hàng", customer_email: activeSessionInfo?.customer_email || "" }, { headers: buildAuthHeaders() });
 
       setReply("");
       await loadMessages(selectedSession);
@@ -194,19 +179,7 @@ export default function AdminChat() {
     };
 
     try {
-      await axios.post(
-        `${API}?action=sendLiveChatMessage`,
-        {
-          chat_session: selectedSession,
-          sender: "admin",
-          message: `🎁 Gợi ý dịch vụ: ${selectedProduct.name}`,
-          message_type: "product",
-          payload,
-          customer_name: activeSessionInfo?.customer_name || "Khách hàng",
-          customer_email: activeSessionInfo?.customer_email || "",
-        },
-        { headers: { "Content-Type": "application/json" } }
-      );
+      await apiClient.post(`/legacy`, { action: "sendLiveChatMessage", chat_session: selectedSession, sender: "admin", message: `🎁 Gợi ý dịch vụ: ${selectedProduct.name}`, message_type: "product", payload, customer_name: activeSessionInfo?.customer_name || "Khách hàng", customer_email: activeSessionInfo?.customer_email || "" }, { headers: buildAuthHeaders() });
 
       await loadMessages(selectedSession);
       await loadSessions();
@@ -270,17 +243,6 @@ export default function AdminChat() {
             </NavLink>
           </li>
 
-          <li>
-            <NavLink to="/thong-ke">
-              <FaChartPie /> Thống kê
-            </NavLink>
-          </li>
-
-          <li>
-            <NavLink to="/admin/ho-so-nguoi-code">
-              <FaUsers /> Hồ sơ người code
-            </NavLink>
-          </li>
         </ul>
       </aside>
 

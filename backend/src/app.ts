@@ -1,13 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express';
-import dotenv from 'dotenv';
 import path from 'path';
 import corsMiddleware from './middleware/cors';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { apiRateLimiter, sameOriginWriteGuard, securityHeaders } from './middleware/security';
 import routes from './routes';
-import sequelize from './config/database';
+import { loadBackendEnv } from './config/env';
 
-dotenv.config();
+loadBackendEnv();
 
 const app = express();
 

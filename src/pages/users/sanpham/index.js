@@ -1,56 +1,101 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { FaEye } from "react-icons/fa";
 import { FiShoppingCart } from "react-icons/fi";
 import { getAuthItem } from "utils/authStorage";
 import { addGuestCartItem } from "utils/guestCart";
 import { apiClient, buildAuthHeaders } from "utils/apiClient";
+import { getImageUrl, getProductImage } from "../../../utils/image";
 import "./style.scss";
-import { getImageUrl } from "../../../utils/image";
 
 const normalizeText = (value) =>
   String(value || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
     .toLowerCase()
     .trim();
 
 const includesOneOf = (text, keywords) =>
   keywords.some((keyword) => text.includes(keyword));
 
+const categoryMatchers = {
+  "thuc don": {
+    ids: [3],
+    keywords: ["thuc don", "ban tiec", "menu", "nau tiec", "nau an", "mon an"],
+  },
+  "thuc don tiec cuoi": {
+    ids: [3],
+    keywords: ["thuc don", "ban tiec", "menu", "nau tiec", "nau an", "mon an"],
+  },
+  "trang tri gia tien": {
+    ids: [1],
+    keywords: ["trang tri", "gia tien", "san khau", "backdrop", "cong hoa"],
+  },
+  "trang tri tiec cuoi": {
+    ids: [5],
+    keywords: ["trang tri", "tiec cuoi", "san khau", "backdrop", "cong hoa", "ban gallery"],
+  },
+  "chup anh cuoi": {
+    ids: [2],
+    keywords: ["chup anh", "anh cuoi", "album", "studio", "phong su anh"],
+  },
+  "quay phim cuoi": {
+    ids: [6],
+    keywords: ["quay phim", "video", "phong su cuoi", "clip cuoi", "highlight"],
+  },
+  "mam qua cuoi hoi": {
+    ids: [7],
+    keywords: ["mam qua", "trap", "rong phung", "le vat", "an hoi"],
+  },
+  "mam qua ket rong phuong": {
+    ids: [7],
+    keywords: ["mam qua", "trap", "rong phung", "le vat", "an hoi"],
+  },
+  "cho thue khung rap": {
+    ids: [9],
+    keywords: ["khung rap", "rap cuoi", "trai cuoi", "nha rap", "ban ghe"],
+  },
+  "dich vu be trap": {
+    ids: [8],
+    keywords: ["be trap", "doi be trap", "bung qua", "le tan"],
+  },
+  "am thanh anh sang": {
+    ids: [10],
+    keywords: ["am thanh", "anh sang", "loa", "micro", "den", "led"],
+  },
+  "trang phuc cuoi": {
+    ids: [11],
+    keywords: ["trang phuc", "ao cuoi", "vest", "ao dai", "makeup", "trang diem"],
+  },
+  "xe hoa": {
+    ids: [12],
+    keywords: ["xe hoa", "xe cuoi", "xe ruoc dau"],
+  },
+  "thiep cuoi & qua cuoi": {
+    ids: [13],
+    keywords: ["thiep cuoi", "qua cuoi", "qua tang", "wedding favor"],
+  },
+  "tron goi ngay cuoi": {
+    ids: [14],
+    keywords: ["tron goi", "ngay cuoi", "cuoi hoi", "combo", "goi cuoi"],
+  },
+};
+
 const matchesCategoryByName = (categoryName, product) => {
-  const text = normalizeText(`${product.name || ""} ${product.description || ""}`);
+  const normalizedCategory = normalizeText(categoryName);
+  const matcher = categoryMatchers[normalizedCategory];
   const productCategoryId = Number(product.category_id || 0);
+  const text = normalizeText(
+    `${product.name || ""} ${product.description || ""} ${product.service_details || ""}`
+  );
 
-  switch (categoryName) {
-    case "Thực Đơn Bàn Tiệc":
-    case "Thực đơn":
-    case "Thực Đơn":
-      if (productCategoryId === 3) return true;
-      return includesOneOf(text, ["thuc don", "ban tiec", "menu"]);
-
-    case "Trang Trí Gia Tiên":
-      return text.includes("gia tien");
-
-    case "Mâm Quả Kết Rồng Phượng": {
-      const hasMamOrTrap = includesOneOf(text, ["mam", "trap", "mam qua"]);
-      const hasRongPhung = includesOneOf(text, ["rong", "phung", "rong phung"]);
-      return hasMamOrTrap && hasRongPhung;
-    }
-
-    case "Cho Thuê Khung Rạp":
-      return includesOneOf(text, ["khung rap", "rap cuoi", "trai cuoi", "nha rap"]);
-
-    case "Dịch Vụ Bê Tráp":
-      return includesOneOf(text, ["be trap", "doi be trap"]);
-
-    case "Trọn Gói Ngày Cưới":
-      return includesOneOf(text, ["tron goi", "ngay cuoi", "cuoi hoi"]);
-
-    default:
-      return false;
+  if (!matcher) {
+    return text.includes(normalizedCategory);
   }
+
+  if (matcher.ids.includes(productCategoryId)) return true;
+  return includesOneOf(text, matcher.keywords);
 };
 
 const ProductCard = ({ product, onAddToCart }) => {
@@ -63,31 +108,26 @@ const ProductCard = ({ product, onAddToCart }) => {
     <div className="product-card">
       <div className="product-image">
         <img
-          src={getImageUrl(product.cover)}
+          src={getImageUrl(getProductImage(product))}
           alt={product.name}
-          onError={(e) => {
-            e.target.src =
-              "https://via.placeholder.com/400x400?text=No+Image";
+          onError={(event) => {
+            event.currentTarget.src = "https://via.placeholder.com/400x400?text=No+Image";
           }}
         />
 
         <div className="image-actions">
-          {/* 👁 CHUYỂN TRANG CHI TIẾT */}
-          <Link
-            to={`/chitietsanpham/${product.id}`}
-            className="circle-btn"
-          >
+          <Link to={`/chitietsanpham/${product.id}`} className="circle-btn" aria-label="Xem chi tiết">
             <FaEye />
           </Link>
 
-          {/* 🛒 GIỎ HÀNG */}
           <button
             type="button"
             className="circle-btn"
-            onClick={(e) => {
-              e.stopPropagation();
+            onClick={(event) => {
+              event.stopPropagation();
               onAddToCart(product.id, 1);
             }}
+            aria-label="Thêm vào giỏ"
           >
             <FiShoppingCart />
           </button>
@@ -96,7 +136,9 @@ const ProductCard = ({ product, onAddToCart }) => {
 
       <div className="product-info">
         <h3 className="product-name">{product.name}</h3>
-        <p className="product-price">{Number(product.price).toLocaleString()} VND</p>
+        <p className="product-price">
+          {Number(product.price || 0).toLocaleString("vi-VN")} VND
+        </p>
 
         <div className="product-rating-real">
           {reviewCount > 0 ? (
@@ -114,7 +156,6 @@ const ProductCard = ({ product, onAddToCart }) => {
             <span className="no-review">Chưa có đánh giá</span>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -123,12 +164,28 @@ const ProductCard = ({ product, onAddToCart }) => {
 const ProductList = () => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
-
   const searchKeyword = queryParams.get("search") || "";
   const categoryParam = queryParams.get("category") || "";
 
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await apiClient.get("/products");
+        setProducts(response.data?.data || []);
+      } catch (error) {
+        console.error("Load products error:", error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   const addToCart = async (productId, quantity) => {
     const userId = getAuthItem("user_id");
@@ -142,16 +199,16 @@ const ProductList = () => {
           productId: Number(productId),
           name: selectedProduct?.name,
           price: Number(selectedProduct?.price || 0),
-          cover: selectedProduct?.cover || "",
+          cover: getProductImage(selectedProduct),
         },
         Number(quantity || 1)
       );
-      alert("Đã thêm vào giỏ hàng ✅");
+      alert("Đã thêm vào giỏ hàng");
       return;
     }
 
     try {
-      const res = await apiClient.post(
+      const response = await apiClient.post(
         "/cart",
         {
           userid: Number(userId),
@@ -161,65 +218,62 @@ const ProductList = () => {
         { headers: buildAuthHeaders() }
       );
 
-      if (res.data.success) {
-        alert("Đã thêm vào giỏ hàng ✅");
+      if (response.data?.success) {
+        alert("Đã thêm vào giỏ hàng");
       } else {
-        alert(res.data.message || "Thêm thất bại ❌");
+        alert(response.data?.message || "Thêm dịch vụ thất bại");
       }
-    } catch (err) {
-      console.error("Add to cart error:", err);
+    } catch (error) {
+      console.error("Add to cart error:", error);
+      alert("Có lỗi xảy ra khi thêm dịch vụ vào giỏ hàng");
     }
   };
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const res = await apiClient.get("/products");
-        setProducts(res.data?.data || []);
-      } catch (err) {
-        console.error("Lỗi load sản phẩm:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const filteredProducts = useMemo(
+    () =>
+      products.filter((product) => {
+        const searchableText = normalizeText(
+          `${product.name || ""} ${product.description || ""} ${product.service_details || ""}`
+        );
+        const matchSearch = searchKeyword
+          ? searchableText.includes(normalizeText(searchKeyword))
+          : true;
 
-    fetchProducts();
-  }, []);
+        const matchCategory = (() => {
+          if (!categoryParam) return true;
 
-  const filteredProducts = products.filter((product) => {
-    const matchSearch = searchKeyword
-      ? product.name?.toLowerCase().includes(searchKeyword.toLowerCase())
-      : true;
+          if (/^\d+$/.test(categoryParam)) {
+            return String(product.category_id) === String(categoryParam);
+          }
 
-    const matchCategory = (() => {
-      if (!categoryParam) return true;
+          const normalizedCategory = normalizeText(categoryParam);
+          const productCategoryCandidates = [
+            product.category_name,
+            product.category,
+            product.category_title,
+          ]
+            .map(normalizeText)
+            .filter(Boolean);
 
-      const paramNormalized = normalizeText(categoryParam);
+          if (
+            productCategoryCandidates.some((name) =>
+              name.includes(normalizedCategory)
+            )
+          ) {
+            return true;
+          }
 
-      // Support old behavior when category is sent as numeric id.
-      if (/^\d+$/.test(categoryParam)) {
-        return String(product.category_id) === String(categoryParam);
-      }
+          return matchesCategoryByName(categoryParam, product);
+        })();
 
-      const productCategoryCandidates = [
-        product.category_name,
-        product.category,
-        product.category_title,
-      ]
-        .map(normalizeText)
-        .filter(Boolean);
+        return matchSearch && matchCategory;
+      }),
+    [categoryParam, products, searchKeyword]
+  );
 
-      if (productCategoryCandidates.some((name) => name.includes(paramNormalized))) {
-        return true;
-      }
-
-      return matchesCategoryByName(categoryParam, product);
-    })();
-
-    return matchSearch && matchCategory;
-  });
-
-  if (loading) return <p className="loading">Đang tải sản phẩm...</p>;
+  if (loading) {
+    return <p className="loading">Đang tải dịch vụ...</p>;
+  }
 
   return (
     <section className="product-list">
@@ -228,20 +282,16 @@ const ProductList = () => {
           ? `Kết quả tìm kiếm: "${searchKeyword}"`
           : categoryParam
           ? `Danh mục: ${categoryParam}`
-          : "Sản phẩm nổi bật"}
+          : "Dịch vụ nổi bật"}
       </h2>
 
       <div className="product-grid">
         {filteredProducts.length > 0 ? (
           filteredProducts.map((item) => (
-            <ProductCard
-              key={item.id}
-              product={item}
-              onAddToCart={addToCart}
-            />
+            <ProductCard key={item.id} product={item} onAddToCart={addToCart} />
           ))
         ) : (
-          <p>Không tìm thấy sản phẩm phù hợp ❌</p>
+          <p>Không tìm thấy dịch vụ phù hợp</p>
         )}
       </div>
     </section>

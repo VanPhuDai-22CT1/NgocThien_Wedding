@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import "./style.scss";
 import { NavLink, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import { getDarkMode, setDarkModeStorage } from "utils/darkMode";
 
 import {
@@ -13,6 +12,8 @@ import {
   FaBox,
   FaShoppingCart,
   FaChartPie,
+  FaCreditCard,
+  FaDownload,
   FaMoon,
   FaSun,
   FaSignOutAlt,
@@ -47,7 +48,6 @@ ChartJS.register(
   Legend
 );
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
 const WEEK_DAYS = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
 const Dashboard = () => {
@@ -73,6 +73,7 @@ const Dashboard = () => {
   const [aiLoading, setAiLoading] = useState(false);
 
   const [darkMode, setDarkMode] = useState(() => getDarkMode());
+  const [selectedExportType, setSelectedExportType] = useState("day");
   const [role, setRole] = useState("");
   const [username, setUsername] = useState("");
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -202,10 +203,9 @@ const Dashboard = () => {
 
     try {
 
-      const res = await apiClient.post(
+      const res = await apiClient.get(
         "/legacy",
-        { action: "getDashboardStats" },
-        { headers: buildAuthHeaders() }
+        { params: { action: "getDashboardStats" }, headers: buildAuthHeaders() }
       );
 
       const data = res?.data;
@@ -215,6 +215,9 @@ const Dashboard = () => {
 
     } catch (error){
       console.log("Dashboard error:",error);
+      const serverMessage = error?.response?.data?.message || error?.message;
+      // optionally show a toast or console; for now log
+      console.warn('Dashboard load failed:', serverMessage);
     }
 
   };
@@ -295,12 +298,37 @@ const Dashboard = () => {
     }
   };
 
+  const exportStatistics = async (type) => {
+    try {
+      const res = await apiClient.get(`/legacy`, {
+        params: { action: 'exportStatistics', type },
+        responseType: 'blob',
+        headers: buildAuthHeaders(),
+      });
+
+      const blob = new Blob([res.data], {
+        type: res.headers['content-type'] || 'text/csv;charset=utf-8',
+      });
+
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `export_${type}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Không thể xuất dữ liệu thống kê');
+    }
+  };
+
   /* ================= LOGOUT ================= */
 
   const logout = () => {
 
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
 
   };
 
@@ -437,18 +465,6 @@ const Dashboard = () => {
             </NavLink>
           </li>
 
-          <li className="statistics-menu">
-            <NavLink to="/thong-ke">
-              <FaChartPie/> Thống kê
-            </NavLink>
-          </li>
-
-          <li>
-            <NavLink to="/admin/ho-so-nguoi-code">
-              <FaUsers/> Hộ sơ người code
-            </NavLink>
-          </li>
-
         </ul>
 
       </aside>
@@ -460,8 +476,11 @@ const Dashboard = () => {
         {/* TOPBAR */}
 
         <header className="topbar">
-
-          <h2>Bảng điều khiển</h2>
+          <div className="topbar-title-group">
+            <span className="topbar-kicker">Admin Control Center</span>
+            <h2>Bảng điều khiển</h2>
+            <p className="topbar-subtitle">Tổng quan vận hành, lịch hẹn, doanh thu và các tác vụ quản trị quan trọng.</p>
+          </div>
 
           <div className="top-actions">
 
@@ -539,6 +558,19 @@ const Dashboard = () => {
             </div>
           </div>
 
+          <div className="stat-card">
+            <div className="stat-icon">
+              <FaCreditCard />
+            </div>
+            <div className="stat-content">
+              <h4>Thanh toán online</h4>
+              <h2>{stats.online_payments || 0}</h2>
+              <p className="online-payment-meta">
+                {formatMoney(stats.online_payment_revenue || 0)} • {stats.online_payment_rate || 0}% đơn
+              </p>
+            </div>
+          </div>
+
         </div>
 
         {/* CHART */}
@@ -555,6 +587,60 @@ const Dashboard = () => {
             <Pie data={pieData}/>
           </div>
 
+        </div>
+
+        <div className="export-section">
+          <div className="export-card">
+            <div className="export-card-head">
+              <div className="export-title-group">
+                <span className="export-eyebrow">Báo cáo nhanh</span>
+                <h3><FaDownload /> Xuất dữ liệu thống kê</h3>
+                <p>Chọn khoảng thời gian cần tải xuống dưới dạng CSV để mở trong Excel hoặc Google Sheets.</p>
+              </div>
+
+              <div className="export-summary">
+                <span>Kỳ đang chọn</span>
+                <strong>
+                  {selectedExportType === "day" && "Theo ngày"}
+                  {selectedExportType === "month" && "Theo tháng"}
+                  {selectedExportType === "year" && "Theo năm"}
+                  {selectedExportType === "quarter" && "Theo quý"}
+                </strong>
+              </div>
+            </div>
+
+            <div className="export-options">
+              <div className="option-group">
+                <label htmlFor="export-type">Loại xuất:</label>
+                <select
+                  id="export-type"
+                  value={selectedExportType}
+                  onChange={(e) => setSelectedExportType(e.target.value)}
+                >
+                  <option value="day">📅 Xuất theo ngày</option>
+                  <option value="month">📆 Xuất theo tháng</option>
+                  <option value="year">📊 Xuất theo năm</option>
+                  <option value="quarter">📈 Xuất theo quý</option>
+                </select>
+              </div>
+
+              <button
+                className="export-btn primary"
+                onClick={() => exportStatistics(selectedExportType)}
+                title="Tải file CSV"
+              >
+                <FaDownload /> Tải ngay
+              </button>
+            </div>
+
+            <div className="export-help">
+              <p><strong>📝 Ghi chú:</strong> Dữ liệu sẽ được tải dưới dạng file CSV. Bạn có thể mở nó bằng Excel hoặc Google Sheets.</p>
+            </div>
+
+            <div className="export-footer-note">
+              <span>Gọn, nhanh, không cần rời trang dashboard.</span>
+            </div>
+          </div>
         </div>
 
         <div className="work-schedule-box">
@@ -669,7 +755,7 @@ const Dashboard = () => {
                     <div className="ai-thumb">
                       {item.cover ? (
                         <img
-                          src={`http://localhost:4000/uploads/${item.cover}`}
+                          src={`/uploads/${item.cover}`}
                           alt={item.product_name}
                           onError={(e) => {
                             e.target.style.display = "none";

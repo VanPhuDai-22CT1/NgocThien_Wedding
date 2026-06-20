@@ -364,6 +364,13 @@ mysql -u root -e "SELECT * FROM information_schema.TABLES WHERE TABLE_SCHEMA='sh
 - [ ] Regular database backups
 - [ ] Implement request logging/monitoring
 
+### Secrets & CI
+
+- Do NOT commit `.env` files or secrets to the repo. Keep a `backend/.env.sample` in repository and store real secrets in CI/CD provider (GitHub Secrets) or a vault.
+- CI workflow included: `.github/workflows/ci.yml` runs backend smoke tests (`backend/api-test.js`) using `JWT_SECRET` from `secrets.JWT_SECRET`.
+- Before deploying, set the following secrets in your repository settings: `JWT_SECRET`, `DB_PASSWORD`, `SMTP_PASS`.
+
+
 ---
 
 ## 📝 Maintenance & Updates

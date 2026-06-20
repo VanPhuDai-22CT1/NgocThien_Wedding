@@ -55,6 +55,17 @@ export const sameOriginWriteGuard = (req: Request, res: Response, next: NextFunc
 };
 
 export const apiRateLimiter = (req: Request, res: Response, next: NextFunction) => {
+  const source = req.get('origin') || req.get('referer') || '';
+  try {
+    const origin = source ? new URL(source).origin : '';
+    if (localOrigins.includes(origin)) {
+      next();
+      return;
+    }
+  } catch (_error) {
+    // Fall through to IP-based rate limiting.
+  }
+
   const key = req.ip || req.socket.remoteAddress || 'unknown';
   const now = Date.now();
   const bucket = requestBuckets.get(key);

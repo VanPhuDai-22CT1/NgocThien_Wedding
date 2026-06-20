@@ -4,6 +4,7 @@ import axios from "axios";
 import ChatBot from "../../../component/chatbot/index";
 import { getAuthItem } from "utils/authStorage";
 import { addGuestCartItem } from "utils/guestCart";
+import { getImageUrl, getProductImage } from "utils/image";
 import {
   FaEye,
   FaShoppingCart,
@@ -31,14 +32,13 @@ import nennb7 from "assets/users/images/hero/a7.jpg";
 // ===== AVATAR KHÁCH HÀNG =====
 // avatar images removed (testimonials deleted)
 
-const API_BASE = "http://localhost:4000/api";
-const UPLOAD_BASE = "http://localhost:4000/uploads";
+const API_BASE = "/api";
 const CUSTOMIZE_API = `${API_BASE}/homepage-config`;
 
 const toSiteImageUrl = (path) => {
   if (!path) return "";
   if (path.startsWith("http")) return path;
-  return `http://localhost:4000/${path.replace(/^\/+/, "")}`;
+  return `/${path.replace(/^\/+/, "")}`;
 };
 
 const HomePage = () => {
@@ -154,6 +154,7 @@ const HomePage = () => {
       `${API_BASE}/legacy`,
       {
         action: "addConsultation",
+        user_id: Number(getAuthItem("user_id") || 0) || null,
         name: consultData.name,
         email: consultData.email,
         phone: consultData.phone,
@@ -330,7 +331,7 @@ const addToCart = (productId) => {
       productId,
       name: selectedProduct?.name,
       price: Number(selectedProduct?.price || 0),
-      cover: selectedProduct?.cover || "",
+      cover: getProductImage(selectedProduct),
     });
     alert("Đã thêm sản phẩm vào giỏ hàng");
     return;
@@ -380,7 +381,6 @@ const addToCart = (productId) => {
 };
   return (
     <div className="home-page-shell">
-    
       {/* ================= CAM KẾT KHÁCH HÀNG ================= */}
       <section className="commit-section reveal commitment-section">
         <div className="commit-wrapper">
@@ -830,11 +830,11 @@ const addToCart = (productId) => {
                         </div>
                       )}
                       <img
-                        src={`${UPLOAD_BASE}/${product.cover}`}
+                        src={getImageUrl(getProductImage(product))}
                         alt={product.name}
                         onError={(e) =>
                           (e.target.src =
-                            `${UPLOAD_BASE}/no-image.png`)
+                            "https://via.placeholder.com/400x400?text=No+Image")
                         }
                       />
 
@@ -920,11 +920,11 @@ const addToCart = (productId) => {
                     <div className="product-image-container">
                       <div className="ai-badge">AI Gợi Ý</div>
                       <img
-                        src={`${UPLOAD_BASE}/${product.cover}`}
+                        src={getImageUrl(getProductImage(product))}
                         alt={product.name}
                         onError={(e) =>
                           (e.target.src =
-                            `${UPLOAD_BASE}/no-image.png`)
+                            "https://via.placeholder.com/400x400?text=No+Image")
                         }
                       />
 

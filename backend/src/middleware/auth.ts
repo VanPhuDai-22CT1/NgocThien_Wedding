@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { User } from '../models';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -10,7 +11,7 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
+export const authMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
   const token = req.headers.authorization?.split(' ')[1];
 
   if (!token) {
@@ -18,8 +19,24 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   }
 
   try {
-    const decoded = jwt.verify(token, (process.env.JWT_SECRET || 'secret') as string);
-    req.user = decoded as AuthRequest['user'];
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ success: false, message: 'Server misconfiguration: JWT_SECRET missing' });
+    }
+
+    const decoded: any = jwt.verify(token, process.env.JWT_SECRET as string);
+    const userId = decoded?.id || decoded?.user_id;
+    const user = userId ? await User.findByPk(userId) : null;
+
+    if (!user || !user.is_active) {
+      return res.status(401).json({ success: false, message: 'Invalid token' });
+    }
+
+    req.user = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      role: user.role,
+    };
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Invalid token' });

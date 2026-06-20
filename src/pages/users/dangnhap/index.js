@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { setAuthSession } from "utils/authStorage";
+import { clearAuthSession, setAuthSession } from "utils/authStorage";
 import { mergeGuestCartToServer } from "utils/guestCart";
-import { apiClient } from "utils/apiClient";
 import "./style.scss";
 
 import nen from "assets/users/images/nen/nendn.jpg";
@@ -17,6 +16,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const loginEndpoint = "http://localhost:5000/api/auth/login";
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,13 +28,21 @@ const LoginPage = () => {
 
     setIsLoading(true);
     setErrorMessage("");
+    clearAuthSession();
 
     try {
-      const response = await apiClient.post("/auth/login", { email, password });
-      const data = response.data || {};
+      const response = await fetch(loginEndpoint, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json().catch(() => ({}));
       const payload = data.data || {};
 
-      if (data.success) {
+      if (response.ok && data.success) {
         const userId =
           payload.user_id ||
           payload.id ||
@@ -48,14 +56,16 @@ const LoginPage = () => {
 
         const normalizedUserId = String(userId).trim();
         const numericUserId = Number(normalizedUserId);
-
-        setAuthSession({
+        const normalizedRole = payload.role === "admin" ? "admin" : "user";
+        const authPayload = {
           user_id: normalizedUserId,
           username: payload.username || "",
           email: payload.email || "",
-          role: payload.role || "user",
+          role: normalizedRole,
           token: payload.token || "",
-        });
+        };
+
+        setAuthSession(authPayload);
 
         try {
           if (Number.isFinite(numericUserId) && numericUserId > 0) {
@@ -67,7 +77,9 @@ const LoginPage = () => {
 
         alert("🎉 Đăng nhập thành công!");
 
-        if (payload.role === "admin") {
+        window.name = JSON.stringify(authPayload);
+
+        if (normalizedRole === "admin") {
           window.location.assign(`${adminOrigin}/dashboard`);
         } else {
           window.location.assign(`${userOrigin}/`);
@@ -77,7 +89,7 @@ const LoginPage = () => {
       }
     } catch (error) {
       console.error("❌ LOGIN ERROR:", error);
-      setErrorMessage(error?.response?.data?.message || "Không thể kết nối backend");
+      setErrorMessage("Không thể kết nối backend");
     } finally {
       setIsLoading(false);
     }
@@ -94,6 +106,7 @@ const LoginPage = () => {
         </div>
 
         <h2>Đăng nhập</h2>
+        <p className="login-subtitle">Chào mừng bạn quay lại với không gian cưới của chúng tôi.</p>
 
         <form onSubmit={handleSubmit}>
           <input

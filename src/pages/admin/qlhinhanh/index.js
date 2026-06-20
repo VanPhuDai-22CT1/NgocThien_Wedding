@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import axios from "axios";
-import { NavLink, useNavigate } from "react-router-dom";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
+import { NavLink } from "react-router-dom";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import {
   FaBell,
   FaBox,
@@ -30,10 +30,7 @@ import nen2 from "assets/users/images/hero/nen2.jpg";
 import nen3 from "assets/users/images/hero/nen3.jpg";
 import heroBgDefault from "assets/users/images/hero/nennen.jpg";
 
-const API = "http://localhost:4000/api/homepage-config";
-
 const HomeImageManagement = () => {
-  const navigate = useNavigate();
   const role = getAuthItem("role");
 
   const [loading, setLoading] = useState(false);
@@ -89,7 +86,7 @@ const HomeImageManagement = () => {
   const toImageUrl = (path) => {
     if (!path) return "";
     if (path.startsWith("http")) return path;
-    return `http://localhost:4000/${path.replace(/^\/+/, "")}`;
+    return `/${path.replace(/^\/+/, "")}`;
   };
 
   const normalizeHistory = (source) => {
@@ -121,7 +118,7 @@ const HomeImageManagement = () => {
   const loadConfig = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${API}?action=getHomepageImages`);
+      const res = await apiClient.get(`/homepage-config`, { params: { action: "getHomepageImages" }, headers: buildAuthHeaders() });
       if (res.data?.success) {
         const data = res.data.data || {};
         const gallery = Array.isArray(data.galleryImages)
@@ -316,9 +313,13 @@ const HomeImageManagement = () => {
 
     setSaving(true);
     try {
-      const res = await axios.post(API, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await apiClient.post(
+        "/homepage-config",
+        formData,
+        {
+          headers: { ...buildAuthHeaders(), "Content-Type": "multipart/form-data" },
+        }
+      );
 
       if (res.data?.success) {
         alert("Cập nhật ảnh trang chủ thành công");
@@ -362,8 +363,7 @@ const HomeImageManagement = () => {
   }, [config.updatedAt]);
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
   };
 
   return (
@@ -410,13 +410,6 @@ const HomeImageManagement = () => {
             <FaHistory /> Lịch sử
           </NavLink>
 
-          <NavLink to="/thong-ke">
-            <FaChartPie /> Thống kê
-          </NavLink>
-
-          <NavLink to="/admin/ho-so-nguoi-code">
-            <FaUsers /> Hồ sơ người code
-          </NavLink>
         </nav>
 
         <button type="button" className="logout-btn" onClick={logout}>

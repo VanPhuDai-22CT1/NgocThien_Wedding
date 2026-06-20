@@ -8,7 +8,7 @@ function Users() {
 
   const handleLogin = () => {
     // Gửi thông tin đăng nhập tới API
-    fetch('http://localhost:4000/api/legacy', {
+    fetch('/api/legacy', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

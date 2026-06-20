@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { useNavigate, NavLink } from "react-router-dom";
 import { getImageUrl } from "../../../utils/image";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import { 
   FaBox, FaUsers, FaShoppingCart, FaBell, FaHistory, 
   FaChartPie, FaSearch, FaPlus, FaTimes, FaStar, FaRegStar,
@@ -10,8 +10,6 @@ import {
   FaSignOutAlt, FaEdit, FaTrash, FaArrowLeft, FaImage, FaRegCalendarAlt
 } from "react-icons/fa";
 import "./style.scss";
-
-const API = "http://localhost:4000/api/legacy";
 
 export default function QLSanPham() {
   const navigate = useNavigate();
@@ -37,19 +35,27 @@ export default function QLSanPham() {
   });
 
   const categories = [
-    { id: 1, name: "Trang trí" },
-    { id: 2, name: "Chụp ảnh" },
-    { id: 3, name: "Thực đơn" },
+    { id: 1, name: "Trang trí gia tiên" },
+    { id: 2, name: "Chụp ảnh cưới" },
+    { id: 3, name: "Thực đơn tiệc cưới" },
     { id: 4, name: "Khác" },
+    { id: 5, name: "Trang trí tiệc cưới" },
+    { id: 6, name: "Quay phim cưới" },
+    { id: 7, name: "Mâm quả cưới hỏi" },
+    { id: 8, name: "Dịch vụ bê tráp" },
+    { id: 9, name: "Cho thuê khung rạp" },
+    { id: 10, name: "Âm thanh ánh sáng" },
+    { id: 11, name: "Trang phục cưới" },
+    { id: 12, name: "Xe hoa" },
+    { id: 13, name: "Thiệp cưới & quà cưới" },
+    { id: 14, name: "Trọn gói ngày cưới" },
   ];
 
   /* ================= FETCH ================= */
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(API, {
-        params: { action: "getProducts" },
-      });
+      const res = await apiClient.get(`/legacy`, { params: { action: "getProducts" }, headers: buildAuthHeaders() });
 
       if (res.data?.success) {
         const normalized = (res.data.data || []).map((p) => ({
@@ -116,6 +122,21 @@ export default function QLSanPham() {
     e.target.value = '';
   };
 
+  const parseProductImages = (imageUrls) => {
+    if (Array.isArray(imageUrls)) return imageUrls.filter(Boolean);
+    if (!imageUrls) return [];
+    try {
+      const parsed = JSON.parse(imageUrls);
+      return Array.isArray(parsed) ? parsed.filter(Boolean) : [];
+    } catch {
+      return typeof imageUrls === "string" && imageUrls ? [imageUrls] : [];
+    }
+  };
+
+  const handleRemoveSlot = (index) => {
+    setImageSlots((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const resetForm = () => {
     setEditingId(null);
     setImageSlots([]);
@@ -165,11 +186,7 @@ export default function QLSanPham() {
     const action = editingId ? "updateProduct" : "addProduct";
 
     try {
-      const res = await axios.post(
-        `${API}?action=${action}`,
-        formData,
-        { headers: { "Content-Type": "multipart/form-data" } }
-      );
+      const res = await apiClient.post(`/legacy?action=${action}`, formData, { headers: { ...buildAuthHeaders(), "Content-Type": "multipart/form-data" } });
 
       if (res.data?.success) {
         alert(editingId ? "Cập nhật thành công!" : "Thêm dịch vụ thành công!");
@@ -196,12 +213,10 @@ export default function QLSanPham() {
       category_id: Number(p.category_id) || 1,
       is_featured: Number(p.is_featured) || 0,
     });
-    try {
-      const images = JSON.parse(p.image_urls || "[]");
-      setImageSlots(images.map(img => ({
-        type: 'existing', filename: img, previewUrl: getImageUrl(img),
-      })));
-    } catch { setImageSlots([]); }
+    const images = parseProductImages(p.image_urls);
+    setImageSlots(images.map(img => ({
+      type: 'existing', filename: img, previewUrl: getImageUrl(img),
+    })));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -210,9 +225,7 @@ export default function QLSanPham() {
 
     setLoading(true);
     try {
-      const res = await axios.get(API, {
-        params: { action: "deleteProduct", id },
-      });
+      const res = await apiClient.get(`/legacy`, { params: { action: "deleteProduct", id }, headers: buildAuthHeaders() });
 
       if (res.data?.success) {
         alert("Xóa thành công!");
@@ -240,9 +253,7 @@ export default function QLSanPham() {
     formData.append("is_featured", nextFeatured);
 
     try {
-      const res = await axios.post(`${API}?action=updateProduct`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await apiClient.post(`/legacy?action=updateProduct`, formData, { headers: { ...buildAuthHeaders(), "Content-Type": "multipart/form-data" } });
 
       if (res.data?.success) {
         setProducts((prev) =>
@@ -271,8 +282,7 @@ export default function QLSanPham() {
   };
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
   };
 
   /* ================= RENDER ================= */
@@ -324,13 +334,6 @@ export default function QLSanPham() {
             <FaHistory /> Lịch sử
           </NavLink>
 
-          <NavLink to="/thong-ke">
-            <FaChartPie /> Thống kê
-          </NavLink>
-
-          <NavLink to="/admin/ho-so-nguoi-code">
-            <FaUsers /> Hồ sơ người code
-          </NavLink>
         </nav>
 
         <div className="sidebar-footer">
@@ -497,6 +500,7 @@ export default function QLSanPham() {
                       <button
                         type="button"
                         className="remove-btn"
+                        onClick={() => handleRemoveSlot(index)}
                         title="Xóa ảnh"
                       >
                         <FaTimes />
@@ -566,10 +570,7 @@ export default function QLSanPham() {
 
                 <tbody>
                   {filteredProducts.map((p) => {
-                    let images = [];
-                    try {
-                      images = JSON.parse(p.image_urls || "[]");
-                    } catch {}
+                    const images = parseProductImages(p.image_urls);
 
                     const category = categories.find((c) => c.id === p.category_id);
 

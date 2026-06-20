@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import {
   FaArrowLeft,
   FaBell,
@@ -51,8 +51,7 @@ const CoderProfilePage = () => {
   const role = getAuthItem("role");
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/");
+    logoutAuthSession("/");
   };
 
   return (

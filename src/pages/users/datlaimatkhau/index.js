@@ -31,7 +31,7 @@ const DatLaiMatKhau = () => {
 
   try {
     const res = await fetch(
-      "http://localhost:4000/api/legacy?action=reset_password",
+      "/api/legacy?action=reset_password",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -2,7 +2,15 @@ import axios from "axios";
 import { getAuthItem } from "utils/authStorage";
 
 const normalizeApiBaseUrl = (rawUrl) => {
-  const fallback = "http://localhost:4000/api";
+  const isLocalBrowser =
+    typeof window !== "undefined" &&
+    ["localhost", "127.0.0.1"].includes(window.location.hostname);
+
+  if (isLocalBrowser) {
+    return "http://localhost:5000/api";
+  }
+
+  const fallback = "http://localhost:5000/api";
   const value = String(rawUrl || "").trim();
 
   if (!value) return fallback;
@@ -22,6 +30,18 @@ export const apiClient = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+});
+
+apiClient.interceptors.request.use((config) => {
+  const headers = buildAuthHeaders();
+  if (headers.Authorization) {
+    config.headers = {
+      ...(config.headers || {}),
+      ...headers,
+    };
+  }
+
+  return config;
 });
 
 export const buildAuthHeaders = () => {

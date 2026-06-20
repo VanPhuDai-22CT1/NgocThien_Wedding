@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import "./style.scss";
 import { getAuthItem } from "utils/authStorage";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const Notification = () => {
   const [consultations, setConsultations] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
   const [formData, setFormData] = useState({
@@ -17,10 +20,8 @@ const Notification = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchConsultations();
-  }, []);
+  const currentUserId = Number(getAuthItem("user_id") || 0);
+  const currentEmail = String(getAuthItem("email") || "").toLowerCase().trim();
 
   useEffect(() => {
     const handleEscape = (event) => {
@@ -35,20 +36,39 @@ const Notification = () => {
     return () => window.removeEventListener("keydown", handleEscape);
   }, []);
 
-  const fetchConsultations = async () => {
+  const fetchConsultations = useCallback(async () => {
     try {
+      setLoading(true);
       const res = await fetch(
-        "http://localhost:4000/api/legacy?action=getConsultations"
+        "/api/legacy?action=getConsultations"
       );
       const data = await res.json();
 
       if (data.success) {
         setConsultations(data.data);
       }
+
+      if (currentUserId) {
+        const orderRes = await apiClient.get(`/orders/user/${currentUserId}`, {
+          headers: buildAuthHeaders(),
+        });
+
+        if (orderRes.data?.success) {
+          setOrders(orderRes.data.orders || []);
+        }
+      } else {
+        setOrders([]);
+      }
     } catch (error) {
       console.error("Lỗi load dữ liệu:", error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [currentUserId]);
+
+  useEffect(() => {
+    fetchConsultations();
+  }, [fetchConsultations]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "";
@@ -182,7 +202,7 @@ const Notification = () => {
   const callApi = async (action, bodyData) => {
     try {
       const res = await fetch(
-        `http://localhost:4000/api/legacy?action=${action}`,
+        `/api/legacy?action=${action}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -206,6 +226,7 @@ const Notification = () => {
   };
 
   const handleEdit = (item) => {
+    if (item.source === "order") return;
     setEditingId(item.id);
     setSelectedConsultation(item);
 
@@ -234,6 +255,7 @@ const Notification = () => {
   };
 
   const handleDelete = async (id) => {
+    if (selectedConsultation?.source === "order") return;
     if (!window.confirm("Bạn có chắc muốn hủy lịch này?")) return;
 
     const success = await callApi("deleteConsultation", { id });
@@ -262,11 +284,8 @@ const Notification = () => {
     setSelectedConsultation(null);
   };
 
-  const currentUserId = Number(getAuthItem("user_id") || 0);
-  const currentEmail = String(getAuthItem("email") || "").toLowerCase().trim();
-
   const visibleConsultations = consultations.filter((item) => {
-    if (!currentUserId && !currentEmail) return true;
+    if (!currentUserId && !currentEmail) return false;
 
     const itemUserId = Number(item.user_id || 0);
     const itemEmail = String(item.email || "").toLowerCase().trim();
@@ -276,6 +295,47 @@ const Notification = () => {
 
     return false;
   });
+
+  const normalizeOrderStatus = (status) => {
+    const normalized = String(status || "").toLowerCase();
+    if (normalized === "pending" || normalized === "processing") return "Đang xử lý";
+    if (normalized === "shipping") return "Đang giao";
+    if (normalized === "delivered" || normalized === "completed") return "Đã giao sự kiện";
+    if (normalized === "cancelled") return "Đã hủy";
+    return status || "Đang xử lý";
+  };
+
+  const getOrderEventDate = (order) => {
+    const note = String(order.note || "");
+    const matched = note.match(/Wedding date:\s*([0-9]{4}-[0-9]{2}-[0-9]{2})/i);
+    return matched?.[1] || order.created_at;
+  };
+
+  const visibleOrders = orders.map((order) => {
+    const serviceNames = Array.isArray(order.OrderItems)
+      ? order.OrderItems.map((item) => item.Product?.name).filter(Boolean)
+      : [];
+
+    return {
+      id: `order-${order.id}`,
+      raw_id: order.id,
+      source: "order",
+      name: order.customer_name || getAuthItem("username") || getAuthItem("email") || "Khách hàng",
+      email: order.email || getAuthItem("email") || "",
+      phone: order.phone || "",
+      service: serviceNames.length ? serviceNames.join(", ") : "Đơn đặt dịch vụ cưới",
+      event_date: getOrderEventDate(order),
+      note: order.note || "",
+      status: normalizeOrderStatus(order.status),
+      created_at: order.created_at,
+      total_amount: order.total_amount,
+      payment_method: order.payment_method,
+    };
+  });
+
+  const notificationItems = [...visibleOrders, ...visibleConsultations].sort(
+    (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+  );
 
   return (
     <div className="notification-page">
@@ -296,11 +356,23 @@ const Notification = () => {
           </div>
         )}
 
-        {visibleConsultations.length === 0 ? (
-          <p className="empty">Chưa có yêu cầu nào</p>
+        {loading ? (
+          <p className="empty">Đang tải thông báo...</p>
+        ) : !currentUserId && !currentEmail ? (
+          <div className="empty-state">
+            <h3>Vui lòng đăng nhập</h3>
+            <p>Đăng nhập để xem yêu cầu đặt tiệc, lịch tư vấn và đơn dịch vụ của bạn.</p>
+            <button type="button" onClick={() => navigate("/login")}>Đăng nhập</button>
+          </div>
+        ) : notificationItems.length === 0 ? (
+          <div className="empty-state">
+            <h3>Chưa có yêu cầu nào</h3>
+            <p>Khi bạn gửi lịch tư vấn hoặc đặt dịch vụ, thông báo sẽ hiển thị tại đây.</p>
+            <button type="button" onClick={() => navigate("/")}>Gửi yêu cầu tư vấn</button>
+          </div>
         ) : (
           <div className="notification-list">
-            {visibleConsultations.map((item) => {
+            {notificationItems.map((item) => {
               const statusMeta = getStatusMeta(item.status);
               const servicePreview = getServicePreview(item.service);
 
@@ -315,7 +387,14 @@ const Notification = () => {
                 >
                   <div className="card-head compact">
                     <div>
-                      <h3>Yêu cầu #{item.id}</h3>
+                      <span className="request-type">
+                        {item.source === "order" ? "Đơn đặt dịch vụ" : "Yêu cầu tư vấn"}
+                      </span>
+                      <h3>
+                        {item.source === "order"
+                          ? `Đơn #${item.raw_id}`
+                          : `Yêu cầu #${item.id}`}
+                      </h3>
                       <small>Gửi lúc: {formatDateTime(item.created_at)}</small>
                     </div>
                     <span className={statusMeta.className}>{statusMeta.label}</span>
@@ -430,7 +509,14 @@ const Notification = () => {
                   <>
                     <div className="modal-head">
                       <div>
-                        <h3>Chi tiết yêu cầu #{selectedConsultation.id}</h3>
+                        <span className="request-type">
+                          {selectedConsultation.source === "order" ? "Đơn đặt dịch vụ" : "Yêu cầu tư vấn"}
+                        </span>
+                        <h3>
+                          {selectedConsultation.source === "order"
+                            ? `Chi tiết đơn #${selectedConsultation.raw_id}`
+                            : `Chi tiết yêu cầu #${selectedConsultation.id}`}
+                        </h3>
                         <small>Gửi lúc: {formatDateTime(selectedConsultation.created_at)}</small>
                       </div>
                       <span className={statusMeta.className}>{statusMeta.label}</span>
@@ -456,9 +542,21 @@ const Notification = () => {
                         <b>{formatDate(selectedConsultation.event_date) || "-"}</b>
                       </div>
                       <div className="info-item">
-                        <span>Mã lịch</span>
-                        <b>#{selectedConsultation.id}</b>
+                        <span>Mã theo dõi</span>
+                        <b>
+                          {selectedConsultation.source === "order"
+                            ? `Đơn #${selectedConsultation.raw_id}`
+                            : `Yêu cầu #${selectedConsultation.id}`}
+                        </b>
                       </div>
+                      {selectedConsultation.source === "order" && (
+                        <div className="info-item">
+                          <span>Tổng chi phí</span>
+                          <b>
+                            {Number(selectedConsultation.total_amount || 0).toLocaleString("vi-VN")} VNĐ
+                          </b>
+                        </div>
+                      )}
                     </div>
 
                     <div className="service-box modal-service-box">
@@ -484,7 +582,11 @@ const Notification = () => {
                     </div>
 
                     <div className="actions modal-actions">
-                      {isCompletedStatus(selectedConsultation.status) ? (
+                      {selectedConsultation.source === "order" ? (
+                        <button className="btn-contacting" onClick={() => navigate("/donhang")}>
+                          Xem lịch sử đặt dịch vụ
+                        </button>
+                      ) : isCompletedStatus(selectedConsultation.status) ? (
                         <button className="btn-contacting">Đã giao sự kiện</button>
                       ) : isDeliveringStatus(selectedConsultation.status) ? (
                         <button className="btn-contacting">Đang giao</button>

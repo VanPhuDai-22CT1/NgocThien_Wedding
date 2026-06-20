@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ROUTERS } from "./utils/router";
-import { getAuthItem } from "utils/authStorage";
+import { getAuthItem, getAuthSession } from "utils/authStorage";
 import MasterLayout from "./pages/users/theme/masterLayuot";
 
 // ===== USER =====
@@ -32,7 +32,6 @@ import QLHoatDong from "./pages/admin/QLHoatDong";
 import Notification from "./pages/admin/thongbaoad";
 import AdminChat from "./pages/admin/adminchat";
 import WorkScheduleManagement from "./pages/admin/lichlamviec";
-import Statistics from "./pages/admin/thongke";
 
 const UserWheelScrollBridge = ({ children }) => {
   useEffect(() => {
@@ -61,16 +60,29 @@ const UserWheelScrollBridge = ({ children }) => {
   return <>{children}</>;
 };
 
-const isAdminHost = typeof window !== "undefined" && window.location.port === "3001";
+const isAdminHost =
+  process.env.REACT_APP_APP_MODE === "admin" ||
+  (typeof window !== "undefined" && ["3001", "3002"].includes(window.location.port));
 const userOrigin = process.env.REACT_APP_USER_URL || "http://localhost:3000";
 const adminOrigin = process.env.REACT_APP_ADMIN_URL || "http://localhost:3001";
+
+const redirectWithAuthSession = (url) => {
+  if (typeof window === "undefined") return;
+
+  const authSession = getAuthSession();
+  if (Object.keys(authSession).length > 0) {
+    window.name = JSON.stringify(authSession);
+  }
+
+  window.location.replace(url);
+};
 
 const UserLanding = () => {
   const role = getAuthItem("role");
 
   useEffect(() => {
     if (role === "admin") {
-      window.location.replace(`${adminOrigin}/`);
+      redirectWithAuthSession(`${adminOrigin}/`);
     }
   }, [role]);
 
@@ -86,7 +98,7 @@ const AdminLanding = () => {
 
   useEffect(() => {
     if (role && role !== "admin") {
-      window.location.replace(`${userOrigin}/`);
+      redirectWithAuthSession(`${userOrigin}/`);
     }
   }, [role]);
 
@@ -108,6 +120,7 @@ const RouterCustom = () => {
     { path: "/chitietsanpham/:id", element: <ProductDetailPage /> },
     { path: ROUTERS.USER.PROFILE, element: <GioHang /> },
     { path: ROUTERS.USER.CustomerInfo, element: <TrangThongTin /> },
+    { path: "/trangthongtinf", element: <Navigate to={ROUTERS.USER.CustomerInfo} replace /> },
     { path: ROUTERS.USER.FreshVeggiesShop, element: <GioiThieu /> },
     { path: ROUTERS.USER.OrderPage, element: <DatHang /> },
     { path: ROUTERS.USER.Payment, element: <ThanhToan /> },
@@ -130,7 +143,7 @@ const RouterCustom = () => {
     { path: ROUTERS.ADMIN.WorkSchedule, element: <WorkScheduleManagement /> },
     { path: ROUTERS.ADMIN.Activity, element: <QLHoatDong /> },
     { path: ROUTERS.ADMIN.ChatManagement, element: <AdminChat /> },
-    { path: ROUTERS.ADMIN.Statistics, element: <Statistics /> },
+    { path: ROUTERS.ADMIN.Statistics, element: <Navigate to="/dashboard" replace /> },
     { path: ROUTERS.ADMIN.CoderProfile, element: <CoderProfilePage /> },
     { path: "/chatadmin", element: <AdminChat /> },
     { path: "/notification", element: <Notification /> },

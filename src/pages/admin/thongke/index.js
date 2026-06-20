@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import "./style.scss";
 import { NavLink, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { clearAuthSession, getAuthItem } from "utils/authStorage";
+import { apiClient, buildAuthHeaders } from "utils/apiClient";
+import { getAuthItem, logoutAuthSession } from "utils/authStorage";
 import { getDarkMode, setDarkModeStorage } from "utils/darkMode";
 import {
   FaUsers,
@@ -41,7 +42,7 @@ ChartJS.register(
   Legend
 );
 
-const API = `${process.env.REACT_APP_API_URL || "http://localhost:4000/api"}/legacy`;
+const API = `${process.env.REACT_APP_API_URL || "/api"}/legacy`;
 
 const Statistics = () => {
   const navigate = useNavigate();
@@ -88,12 +89,10 @@ const Statistics = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.post(API, {
-        action: "getDashboardStats"
-      });
+      const response = await apiClient.get(`/legacy`, { params: { action: "getDashboardStats" }, headers: buildAuthHeaders() });
       const data = response.data;
 
-      if (data.success) {
+      if (data && data.success !== false) {
         setStats(data);
       }
     } catch (error) {
@@ -102,8 +101,23 @@ const Statistics = () => {
   };
 
   const exportExcel = (type) => {
-    const url = `${API}?action=exportStatistics&type=${type}`;
-    window.open(url, "_blank");
+    (async () => {
+      try {
+        const res = await apiClient.get(`/legacy`, { params: { action: 'exportStatistics', type }, responseType: 'blob', headers: buildAuthHeaders() });
+        const blob = new Blob([res.data], { type: res.headers['content-type'] || 'application/octet-stream' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `export_${type}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+      } catch (err) {
+        console.error('Export error', err);
+        alert('Không thể xuất dữ liệu');
+      }
+    })();
   };
 
   const formatMoney = (money) => {
@@ -212,8 +226,7 @@ const Statistics = () => {
   };
 
   const logout = () => {
-    clearAuthSession();
-    navigate("/login");
+    logoutAuthSession("/");
   };
 
   return (
@@ -280,17 +293,6 @@ const Statistics = () => {
             </NavLink>
           </li>
 
-          <li className="statistics-menu">
-            <NavLink to="/thong-ke">
-              <FaChartPie /> Thống kê
-            </NavLink>
-          </li>
-
-          <li>
-            <NavLink to="/admin/ho-so-nguoi-code">
-              <FaUsers /> Hồ sơ người code
-            </NavLink>
-          </li>
         </ul>
       </aside>
 
